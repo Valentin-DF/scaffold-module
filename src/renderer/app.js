@@ -49,6 +49,11 @@ const TOGGLE_COLS = [
   { key: 'import', label: 'Imp', tooltip: 'Incluir en Import (Excel)' },
 ];
 
+const DET_TOGGLE_COLS = [
+  ...TOGGLE_COLS,
+  { key: 'padre', label: 'Pad', tooltip: 'Campo padre del detalle' },
+];
+
 // ── State ──
 let camposData = [];  // { nombre, campo, tipo, default, entity, request, response, listar, model, suggest, import }
 let detalleCards = []; // { nombre, tabla, valida, importar, campos: [...] }
@@ -61,6 +66,7 @@ const $$ = (s) => document.querySelectorAll(s);
 const txtBase = $('#txtBase');
 const txtRuta = $('#txtRuta');
 const cmbDom = $('#cmbDom');
+const txtServicio = $('#txtServicio');
 const cmbTipo = $('#cmbTipo');
 const txtTabla = $('#txtTabla');
 const txtComponent = $('#txtComponent');
@@ -77,6 +83,14 @@ const txtResult = $('#txtResult');
 
 // ── Init ──
 cmbTipo.addEventListener('change', () => populateDefaults(cmbTipo.value));
+cmbDom.addEventListener('change', () => {
+  if (!txtServicio.dataset.userChanged) {
+    txtServicio.value = `${cmbDom.value}-service`;
+  }
+});
+txtServicio.addEventListener('input', () => {
+  txtServicio.dataset.userChanged = 'true';
+});
 populateDefaults('mantenedores');
 
 function toPascalCase(s) {
@@ -260,7 +274,7 @@ function createDetalleCard() {
   card.className = 'detalle-card';
   card.dataset.id = id;
 
-  const cardState = { nombre: '', tabla: '', valida: false, importar: false, campos: [] };
+  const cardState = { nombre: '', tabla: '', valida: false, importar: false, campos: [{ nombre: 'Id', campo: 'id', tipo: 'int64', default: false, entity: true, request: true, response: true, listar: true, model: true, suggest: false, padre: false, import: false }] };
   detalleCards.push(cardState);
 
   card.innerHTML = `
@@ -308,7 +322,7 @@ function renderDetCampos(id) {
 
   let html = '<table><thead><tr>';
   html += '<th>Nombre</th><th>Tag BD</th><th>Tipo</th>';
-  for (const tc of TOGGLE_COLS) {
+  for (const tc of DET_TOGGLE_COLS) {
     html += `<th class="col-tiny" title="${tc.tooltip}">${tc.label}</th>`;
   }
   html += '</tr></thead><tbody>';
@@ -318,7 +332,7 @@ function renderDetCampos(id) {
     html += `<td><input type="text" value="${escHtml(c.nombre || '')}" class="dc-input" data-id="${id}" data-idx="${i}" data-field="nombre" style="width:100%;border:none;background:transparent;color:var(--text);font-family:var(--mono);font-size:11px" /></td>`;
     html += `<td><input type="text" value="${escHtml(c.campo || '')}" class="dc-input" data-id="${id}" data-idx="${i}" data-field="campo" style="width:100%;border:none;background:transparent;color:var(--text);font-family:var(--mono);font-size:11px" /></td>`;
     html += `<td><select class="dc-select" data-id="${id}" data-idx="${i}" data-field="tipo" style="width:100%;border:none;background:transparent;color:var(--text);font-size:11px">${TYPES.map(t => `<option value="${t}"${t === c.tipo ? ' selected' : ''}>${t}</option>`).join('')}</select></td>`;
-    for (const tc of TOGGLE_COLS) {
+    for (const tc of DET_TOGGLE_COLS) {
       let checked = c[tc.key] ? ' checked' : '';
       let ro = tc.readOnly ? ' disabled' : '';
       if (tc.key === 'import' && !detalleCards[cardIdx].importar) {
@@ -352,7 +366,11 @@ function renderDetCampos(id) {
       const isReadOnly = TOGGLE_COLS.find(tc => tc.key === field)?.readOnly;
       if (isReadOnly) return;
       if (field === 'import' && !detalleCards[cardIdx].importar) return;
+      if (field === 'padre' && e.target.checked) {
+        detalleCards[cardIdx].campos.forEach((c, i) => { if (i !== idx) c.padre = false; });
+      }
       detalleCards[cardIdx].campos[idx][field] = e.target.checked;
+      if (field === 'padre') renderDetCampos(id);
     });
   });
 }
@@ -479,6 +497,7 @@ btnGen.addEventListener('click', async () => {
   const config = {
     ruta: txtRuta.value.trim(),
     dominio: cmbDom.value,
+    servicio: txtServicio.value.trim() || `${cmbDom.value}-service`,
     tipo: cmbTipo.value,
     tabla: txtTabla.value.trim(),
     componente: txtComponent.value.trim(),

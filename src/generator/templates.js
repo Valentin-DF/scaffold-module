@@ -6,16 +6,16 @@ function structField(name, type, tag, kind) {
   return `\t${name}\t\t\t\t${type}${t}`;
 }
 
-function mapField(name) {
-  return `\t\t${name}: e.${name},`;
+function mapField(f) {
+  return `\t\t${f.name}: e.${f.name},`;
 }
 
-function listarField(name) {
-  return `\t\t\t${name}: models[i].${name},`;
+function listarField(f) {
+  return `\t\t\t${f.name}: models[i].${f.name},`;
 }
 
-function rowField(name) {
-  return `\t\t${name}: row.${name},`;
+function rowField(f) {
+  return `\t\t${f.name}: row.${f.name},`;
 }
 
 function dtoField(name) {
@@ -24,6 +24,9 @@ function dtoField(name) {
 
 // ── 1. Module entry point (.mnt.go) ──
 function mntGo(p) {
+  const brokerImport = p.usesBroker ? '\n\t"gitlab.com/ns-desarrollo-web/erp/ns-core-service/pkg/kafka"' : '';
+  const brokerParam = p.usesBroker ? ', broker kafka.Broker' : '';
+  const brokerArg = p.usesBroker ? ', broker' : '';
   return `package ${p.packageName}
 
 import (
@@ -32,13 +35,13 @@ import (
 	"${p.importPath}/infrastructure/persistence/mssql_repository"
 
 	"gitlab.com/ns-desarrollo-web/erp/ns-core-service"
-	db "gitlab.com/ns-desarrollo-web/erp/ns-core-service/pkg/database"
+	db "gitlab.com/ns-desarrollo-web/erp/ns-core-service/pkg/database"${brokerImport}
 )
 
-func Create(router *ns.Router, db db.Sql) {
+func Create(router *ns.Router, db db.Sql${brokerParam}) {
 	repository := mssql_repository.New${p.pascal}Repository(db)
 	useCase := usecase.New${p.pascal}UseCase(repository)
-	routes.New${p.pascal}Routes(router, useCase)
+	routes.New${p.pascal}Routes(router, useCase${brokerArg})
 }
 `;
 }
@@ -656,16 +659,18 @@ func New${p.pascal}Controller(useCase usecase.${p.pascal}UseCase) *${p.pascal}Co
 
 // ── 10. Routes ──
 function routesGo(p) {
+  const brokerImport = p.usesBroker ? '\n\t"gitlab.com/ns-desarrollo-web/erp/ns-core-service/pkg/kafka"' : '';
+  const brokerParam = p.usesBroker ? ', broker kafka.Broker' : '';
   return `package routes
 
 import (
 	"${p.importPath}/application/usecase"
 	"${p.importPath}/infrastructure/delivery/http/controller"
 
-	"gitlab.com/ns-desarrollo-web/erp/ns-core-service"
+	"gitlab.com/ns-desarrollo-web/erp/ns-core-service"${brokerImport}
 )
 
-func New${p.pascal}Routes(router *ns.Router, useCase usecase.${p.pascal}UseCase) {
+func New${p.pascal}Routes(router *ns.Router, useCase usecase.${p.pascal}UseCase${brokerParam}) {
 	c := controller.New${p.pascal}Controller(useCase)
 
 	//CABECERA
@@ -812,7 +817,7 @@ function mssqlGo(p) {
 		err = fmt.Errorf("no meta found in context")
 		return
 	}
-	_, err = a.db.Query(ctx, "UPDATE ${p.tabla} SET estado = 'E' WHERE id = @p1 AND idempresa=@p2", id, meta.Client.CompanyId)
+	_, err = a.db.Query(ctx, "UPDATE ${p.tabla} SET estado = 'E', fecha_actualizado = DATEADD(HOUR, -5, GETUTCDATE()) WHERE id = @p1 AND idempresa=@p2", id, meta.Client.CompanyId)
 	if err != nil {
 		return
 	}
@@ -877,7 +882,7 @@ func (a *${p.pascal}MssqlRepository) HabilitarDeshabilitar(ctx context.Context, 
 		err = fmt.Errorf("no meta found in context")
 		return
 	}
-	_, err = a.db.Query(ctx, "UPDATE ${p.tabla} SET habilitado = @p1 WHERE id = @p2 AND idempresa=@p3", status, id, meta.Client.CompanyId)
+	_, err = a.db.Query(ctx, "UPDATE ${p.tabla} SET habilitado = @p1, fecha_actualizado = DATEADD(HOUR, -5, GETUTCDATE()) WHERE id = @p2 AND idempresa=@p3", status, id, meta.Client.CompanyId)
 	return
 }
 

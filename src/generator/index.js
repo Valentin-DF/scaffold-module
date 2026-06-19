@@ -9,6 +9,7 @@ async function generate(config) {
 
   const ruta = config.ruta.trim();
   const dominio = config.dominio;
+  const servicio = config.servicio || `${dominio}-service`;
   const tipo = config.tipo;
   const tabla = config.tabla.trim();
   const usesBroker = config.broker;
@@ -20,11 +21,11 @@ async function generate(config) {
   const pascal = toPascalCase(ruta);
   const camel = toCamelCase(ruta);
   const packageName = toGoPackageName(ruta);
-  const componentId = generateComponentId();
-  const componentField = config.componente || pascal;
+  const componentId =config.componente;
+  const componentField =  pascal;
 
-  const moduleDir = path.join(basePath, dominio, `${dominio}-service`, 'api', tipo, ruta);
-  const importPath = `ns-backoffice-transactional-service/${dominio}/${dominio}-service/api/${tipo}/${ruta}`;
+  const moduleDir = path.join(basePath, dominio, servicio, 'api', tipo, ruta);
+  const importPath = `ns-backoffice-transactional-service/${dominio}/${servicio}/api/${tipo}/${ruta}`;
 
   // Parse fields
   const fields = campos.map((c) => ({
@@ -44,7 +45,7 @@ async function generate(config) {
 
   const p = {
     ruta, dominio, tipo, tabla, pascal, camel, packageName, componentId, componentField,
-    moduleDir, importPath, fields, importFields, logs,
+    moduleDir, importPath, fields, importFields, logs, usesBroker,
   };
 
   log(`=== Generando modulo: ${ruta} ===`);
@@ -53,6 +54,7 @@ async function generate(config) {
   log(`  Package: ${packageName}`);
   log(`  Tabla: ${tabla}`);
   log(`  ComponentId: ${componentId}`);
+  log(`  ComponentField: ${componentField}`);
   log(`  Directorio: ${moduleDir}`);
 
   // Create directories
@@ -647,8 +649,8 @@ func (a *${pascal}Controller) Save${detPascal}Import(ctx *ns.Client) {
       log(`  [!] Import ya existe en endpoints.go`);
     }
 
-    const createCallQuote = `${packageName}.Create(`;
-    if (!endpointsContent.includes(createCallQuote)) {
+    const createCallRegex = new RegExp(`\\b${packageName}\\.Create\\(router`);
+    if (!createCallRegex.test(endpointsContent)) {
       const lineToAdd = usesBroker ? `${packageName}.Create(router, db, broker)` : `${packageName}.Create(router, db)`;
       const closingInitBrace = endpointsContent.lastIndexOf('\n}');
       endpointsContent = endpointsContent.slice(0, closingInitBrace) + `\n\t// ${domainUpper}\n\t${lineToAdd}` + endpointsContent.slice(closingInitBrace);
@@ -663,13 +665,31 @@ func (a *${pascal}Controller) Save${detPascal}Import(ctx *ns.Client) {
   const componentFile = path.join(basePath, 'utils', 'component.utils.go');
   if (fs.existsSync(componentFile)) {
     let componentContent = fs.readFileSync(componentFile, 'utf-8');
+
+    // Add field to struct type definition
+    if (!componentContent.includes(`${componentField} string`)) {
+      const structTypePos = componentContent.indexOf('type Componentes struct {');
+      if (structTypePos !== -1) {
+        const structBodyStart = structTypePos + 'type Componentes struct {'.length;
+        const structClosePos = componentContent.indexOf('\n}', structBodyStart);
+        if (structClosePos !== -1) {
+          componentContent = componentContent.slice(0, structClosePos) + `\n\t${componentField} string` + componentContent.slice(structClosePos);
+          log(`  [+] Campo ${componentField} agregado a type Componentes struct`);
+        }
+      }
+    }
+
+    // Add value to var initialization
     if (!componentContent.includes(`${componentField}:`)) {
       const closingStructBrace = componentContent.lastIndexOf('\n}');
-      componentContent = componentContent.slice(0, closingStructBrace) + `\n\t${componentField}: "${componentId}",` + componentContent.slice(closingStructBrace);
-      log(`  [+] ComponentId agregado a component.utils.go`);
+      if (closingStructBrace !== -1) {
+        componentContent = componentContent.slice(0, closingStructBrace) + `\n\t${componentField}: "${componentId}",` + componentContent.slice(closingStructBrace);
+        log(`  [+] ComponentId agregado a component.utils.go`);
+      }
     } else {
       log(`  [!] ComponentId ${componentField} ya existe en component.utils.go`);
     }
+
     fs.writeFileSync(componentFile, componentContent, 'utf-8');
   }
 
