@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scaffold Modulo - Backoffice Transactional</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-content">
+      <h1>Scaffold de Módulos</h1>
+      <p class="subtitle">Genera la estructura completa de un nuevo módulo Go con detalle</p>
+    </div>
+    <div class="header-accent"></div>
+  </header>
+
+  <main>
+    <!-- CONFIGURACION -->
+    <div class="card">
+      <div class="card-header">
+        <div class="section-line"></div>
+        <span class="section-title">CONFIGURACION</span>
+      </div>
+      <div class="card-body">
+        <div class="config-grid">
+          <div class="form-group">
+            <label class="form-label">Ruta raiz</label>
+            <div class="input-group">
+              <input type="text" id="txtBase" value="D:\NISIRA\ERPWEB\ns-backoffice-transactional-service" class="input mono" />
+              <button id="btnBrowse" class="btn btn-accent">...</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modulo</label>
+            <input type="text" id="txtRuta" value="motivo-produccion" class="input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dominio</label>
+            <select id="cmbDom" class="select">
+              <option value="produccion">produccion</option>
+              <option value="ventas">ventas</option>
+              <option value="compras">compras</option>
+              <option value="almacenes">almacenes</option>
+              <option value="caja-bancos">caja-bancos</option>
+              <option value="contabilidad">contabilidad</option>
+              <option value="por-cobrar">por-cobrar</option>
+              <option value="por-pagar">por-pagar</option>
+              <option value="presupuesto">presupuesto</option>
+              <option value="recursos-humanos">recursos-humanos</option>
+              <option value="activos">activos</option>
+              <option value="compartido">compartido</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <select id="cmbTipo" class="select">
+              <option value="mantenedores">mantenedores</option>
+              <option value="movimientos">movimientos</option>
+              <option value="procesos">procesos</option>
+              <option value="reportes">reportes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tabla BD</label>
+            <input type="text" id="txtTabla" value="TMMOTIVO_PRODUCCION" class="input mono" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Componente</label>
+            <input type="text" id="txtComponent" value="MotivoProduccion" class="input mono" />
+          </div>
+          <div class="form-group">
+            <div class="checkbox-group">
+              <label class="chk-label">
+                <input type="checkbox" id="chkBroker" class="chk-warning" />
+                <span>Usa Broker (Kafka / Email)</span>
+              </label>
+              <label class="chk-label">
+                <input type="checkbox" id="chkTieneDetalle" />
+                <span>Tiene Detalle</span>
+              </label>
+              <label class="chk-label">
+                <input type="checkbox" id="chkImportHeader" />
+                <span>Importar (Cabecera)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMPOS -->
+    <div class="card card-table">
+      <div class="card-header">
+        <div class="section-line"></div>
+        <span class="section-title">CAMPOS DEL MODULO</span>
+        <div class="card-header-spacer"></div>
+        <div class="bulk-tags">
+          <input type="text" id="txtTags" placeholder="tag1:string,tag2:int64,..." class="input mono small" />
+          <button id="btnTagsGen" class="btn btn-sm btn-accent">Generar</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="campos-toolbar">
+          <button id="btnCamposAdd" class="btn btn-sm btn-success">+ Agregar Campo</button>
+          <button id="btnCamposRemove" class="btn btn-sm btn-danger" disabled>− Quitar Seleccionados</button>
+        </div>
+        <div id="camposTable" class="table-container"></div>
+      </div>
+    </div>
+
+    <!-- DETALLE -->
+    <div id="detalleSection" class="detalle-section" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <div class="section-line"></div>
+          <span class="section-title">DETALLE</span>
+          <div class="card-header-spacer"></div>
+          <button id="detalleBtnRemove" class="btn btn-sm btn-danger">− Ultimo</button>
+          <button id="detalleBtnAdd" class="btn btn-sm btn-success">+ Detalle</button>
+        </div>
+        <div class="card-body">
+          <div id="detalleCards" class="detalle-cards"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-accent"></div>
+    <button id="btnGen" class="btn btn-gen" disabled>Generar Modulo</button>
+  </footer>
+</div>
+
+<!-- Result modal -->
+<div id="resultModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Resultado</h2>
+    </div>
+    <textarea id="txtResult" class="result-log" readonly></textarea>
+    <div class="modal-footer">
+      <button id="btnCloseResult" class="btn btn-accent">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
