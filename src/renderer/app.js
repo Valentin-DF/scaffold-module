@@ -414,7 +414,7 @@ function createDetalleCard() {
         </div>
         <div class="det-tags-group">
           <input type="text" class="input mono small det-tags-input" data-id="${id}" placeholder="tag1:string,tag2:int64,..." style="width:200px" />
-          <button class="btn btn-sm btn-accent det-tags-gen" data-id="${id}">+Tags</button>
+          <button class="btn btn-sm btn-accent det-tags-gen" data-id="${id}">Generar</button>
         </div>
       </div>
       <div class="det-campos-table" data-id="${id}"></div>
