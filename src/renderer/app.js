@@ -413,7 +413,7 @@ function createDetalleCard() {
           <button class="btn btn-sm btn-danger det-campo-remove" data-id="${id}">− Campo</button>
         </div>
         <div class="det-tags-group">
-          <input type="text" class="input mono small det-tags-input" data-id="${id}" placeholder="tag1,tag2..." style="width:200px" />
+          <input type="text" class="input mono small det-tags-input" data-id="${id}" placeholder="tag1:string,tag2:int64,..." style="width:200px" />
           <button class="btn btn-sm btn-accent det-tags-gen" data-id="${id}">+Tags</button>
         </div>
       </div>
