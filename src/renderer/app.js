@@ -76,6 +76,7 @@ const chkImportHeader = $('#chkImportHeader');
 const chkPorSP = $('#chkPorSP');
 const suggestCodeEl = $('#suggestCode');
 const suggestLabelEl = $('#suggestLabel');
+const camposSection = $('#camposSection');
 const camposTable = $('#camposTable');
 const importSection = $('#importSection');
 const importTable = $('#importTable');
@@ -121,6 +122,72 @@ function populateDefaults(tipo) {
     import: false,
   }));
   renderCampos();
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ── Render import fields table ──
+function renderImportFields() {
+  let html = '<table><thead><tr>';
+  html += '<th class="col-tiny"><input type="checkbox" id="selectAllImp" title="Seleccionar todo" /></th>';
+  html += '<th class="col-mid">Nombre Campo</th>';
+  html += '<th class="col-small">Tag BD</th>';
+  html += '<th class="col-small">Tipo Go</th>';
+  html += '</tr></thead><tbody>';
+
+  importFieldsData.forEach((c, i) => {
+    html += '<tr>';
+    html += `<td><input type="checkbox" class="row-select-imp" data-idx="${i}" /></td>`;
+    html += `<td><input type="text" value="${escHtml(c.nombre)}" data-idx="${i}" data-field="nombre" class="cell-input-imp" /></td>`;
+    html += `<td><input type="text" value="${escHtml(c.campo)}" data-idx="${i}" data-field="campo" class="cell-input-imp" /></td>`;
+    html += `<td><select data-idx="${i}" data-field="tipo" class="cell-select-imp">${TYPES.map(t => `<option value="${t}"${t === c.tipo ? ' selected' : ''}>${t}</option>`).join('')}</select></td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  importTable.innerHTML = html;
+
+  importTable.querySelectorAll('.cell-input-imp').forEach(el => {
+    el.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      const field = e.target.dataset.field;
+      importFieldsData[idx][field] = e.target.value;
+    });
+  });
+  importTable.querySelectorAll('.cell-select-imp').forEach(el => {
+    el.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      importFieldsData[idx].tipo = e.target.value;
+    });
+  });
+
+  const updateRemoveBtn = () => {
+    const checked = importTable.querySelectorAll('.row-select-imp:checked');
+    btnImportRemove.disabled = checked.length === 0;
+  };
+
+  importTable.querySelectorAll('.row-select-imp').forEach(el => {
+    el.addEventListener('change', (e) => {
+      e.target.closest('tr').classList.toggle('row-selected', e.target.checked);
+      updateRemoveBtn();
+    });
+  });
+
+  const selectAll = importTable.querySelector('#selectAllImp');
+  if (selectAll) {
+    selectAll.addEventListener('change', (e) => {
+      importTable.querySelectorAll('.row-select-imp').forEach(el => {
+        el.checked = e.target.checked;
+        el.closest('tr').classList.toggle('row-selected', e.target.checked);
+      });
+      updateRemoveBtn();
+    });
+  }
+
+  updateRemoveBtn();
 }
 
 // ── Render campos table ──
@@ -262,6 +329,7 @@ $('#btnTagsGen').addEventListener('click', () => {
 // ── Toggle import section ──
 chkImportHeader.addEventListener('change', () => {
   importSection.style.display = chkImportHeader.checked ? 'block' : 'none';
+  camposSection.style.display = chkImportHeader.checked ? 'none' : 'block';
   if (!chkImportHeader.checked) {
     importFieldsData = [];
     renderImportFields();
