@@ -365,7 +365,6 @@ $('#btnTagsGen').addEventListener('click', () => {
 // ── Toggle import section ──
 chkImportHeader.addEventListener('change', () => {
   importSection.style.display = chkImportHeader.checked ? 'block' : 'none';
-  camposSection.style.display = chkImportHeader.checked ? 'none' : 'block';
   if (!chkImportHeader.checked) {
     importFieldsData = [];
     renderImportFields();
