@@ -406,9 +406,9 @@ function createDetalleCard() {
       <label class="chk-label"><input type="checkbox" class="det-import" data-id="${id}" /> Importar</label>
     </div>
     <div class="det-campos">
-      <div class="det-campos-header">
-        <span class="det-campos-title">Campos:</span>
-        <div class="det-campos-toolbar">
+      <div class="det-campos-title">Campos:</div>
+      <div class="det-campos-toolbar-row">
+        <div class="det-campos-btns">
           <button class="btn btn-sm btn-success det-campo-add" data-id="${id}">+ Campo</button>
           <button class="btn btn-sm btn-danger det-campo-remove" data-id="${id}">− Campo</button>
         </div>
@@ -420,9 +420,9 @@ function createDetalleCard() {
       <div class="det-campos-table" data-id="${id}"></div>
     </div>
     <div class="det-import-section" data-id="${id}" style="display:none">
-      <div class="det-import-header">
-        <span class="det-campos-title">Campos de Importacion (Excel)</span>
-        <div class="det-campos-toolbar">
+      <div class="det-campos-title">Campos de Importacion (Excel)</div>
+      <div class="det-import-toolbar-row">
+        <div class="det-campos-btns">
           <button class="btn btn-sm btn-success det-import-add" data-id="${id}">+ Agregar Campo</button>
           <button class="btn btn-sm btn-danger det-import-remove" data-id="${id}">− Quitar Seleccionados</button>
         </div>
