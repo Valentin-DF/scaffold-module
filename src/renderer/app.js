@@ -45,17 +45,17 @@ const TOGGLE_COLS = [
   { key: 'response', label: 'Res', tooltip: 'Incluir en Response' },
   { key: 'listar', label: 'Lis', tooltip: 'Incluir en Listar' },
   { key: 'model', label: 'Mod', tooltip: 'Incluir en Model' },
-  { key: 'suggest', label: 'Sug', tooltip: 'Generar campo Nombre relacionado' },
-  { key: 'import', label: 'Imp', tooltip: 'Incluir en Import (Excel)' },
 ];
 
 const DET_TOGGLE_COLS = [
   ...TOGGLE_COLS,
+  { key: 'import', label: 'Imp', tooltip: 'Incluir en Import (Excel)' },
   { key: 'padre', label: 'Pad', tooltip: 'Campo padre del detalle' },
 ];
 
 // ── State ──
-let camposData = [];  // { nombre, campo, tipo, default, entity, request, response, listar, model, suggest, import }
+let camposData = [];  // { nombre, campo, tipo, default, entity, request, response, listar, model }
+let importFieldsData = []; // { nombre, campo, tipo }
 let detalleCards = []; // { nombre, tabla, valida, importar, campos: [...] }
 let detalleCardId = 0;
 
@@ -73,7 +73,14 @@ const txtComponent = $('#txtComponent');
 const chkBroker = $('#chkBroker');
 const chkTieneDetalle = $('#chkTieneDetalle');
 const chkImportHeader = $('#chkImportHeader');
+const chkPorSP = $('#chkPorSP');
+const suggestCodeEl = $('#suggestCode');
+const suggestLabelEl = $('#suggestLabel');
 const camposTable = $('#camposTable');
+const importSection = $('#importSection');
+const importTable = $('#importTable');
+const btnImportAdd = $('#btnImportAdd');
+const btnImportRemove = $('#btnImportRemove');
 const detalleSection = $('#detalleSection');
 const detalleCardsEl = $('#detalleCards');
 const btnGen = $('#btnGen');
@@ -111,13 +118,18 @@ function populateDefaults(tipo) {
     nombre: r[0], campo: r[1], tipo: r[2],
     default: r[3], entity: r[4], request: r[5],
     response: r[6], listar: r[7], model: r[8],
-    suggest: false, import: false,
+    import: false,
   }));
   renderCampos();
 }
 
 // ── Render campos table ──
 function renderCampos() {
+  renderCamposTable();
+  renderSuggestCombos();
+}
+
+function renderCamposTable() {
   let html = '<table><thead><tr>';
   html += '<th class="col-tiny"><input type="checkbox" id="selectAll" title="Seleccionar todo" /></th>';
   html += '<th class="col-mid">Nombre Campo</th>';
@@ -137,10 +149,6 @@ function renderCampos() {
     for (const tc of TOGGLE_COLS) {
       let checked = c[tc.key] ? ' checked' : '';
       let ro = tc.readOnly ? ' disabled' : '';
-      if (tc.key === 'import' && !chkImportHeader.checked) {
-        checked = '';
-        ro = ' disabled';
-      }
       html += `<td><input type="checkbox" data-idx="${i}" data-field="${tc.key}"${checked}${ro} class="cell-chk" /></td>`;
     }
     html += '</tr>';
@@ -168,7 +176,6 @@ function renderCampos() {
       const field = e.target.dataset.field;
       const isReadOnly = TOGGLE_COLS.find(tc => tc.key === field)?.readOnly;
       if (isReadOnly) return;
-      if (field === 'import' && !chkImportHeader.checked) return;
       camposData[idx][field] = e.target.checked;
     });
   });
@@ -201,29 +208,33 @@ function renderCampos() {
   updateRemoveBtn();
 }
 
-function escHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-// ── Add/Remove campos ──
-$('#btnCamposAdd').addEventListener('click', () => {
-  camposData.push({
-    nombre: '', campo: '', tipo: 'string', default: false,
-    entity: true, request: true, response: true,
-    listar: true, model: true, suggest: false, import: false,
-  });
-  renderCampos();
+// ── Import add/remove ──
+btnImportAdd.addEventListener('click', () => {
+  importFieldsData.push({ nombre: '', campo: '', tipo: 'string' });
+  renderImportFields();
 });
 
-$('#btnCamposRemove').addEventListener('click', () => {
-  const checked = [...camposTable.querySelectorAll('.row-select:checked')];
+btnImportRemove.addEventListener('click', () => {
+  const checked = [...importTable.querySelectorAll('.row-select-imp:checked')];
   const indexes = checked.map(el => parseInt(el.dataset.idx)).sort((a, b) => b - a);
   for (const idx of indexes) {
-    camposData.splice(idx, 1);
+    importFieldsData.splice(idx, 1);
   }
-  renderCampos();
+  renderImportFields();
+});
+
+$('#btnImpTagsGen').addEventListener('click', () => {
+  const tags = $('#txtImpTags').value.split(',').map(s => s.trim()).filter(Boolean);
+  for (const t of tags) {
+    const parts = t.split(/[:|]/);
+    const tagName = parts[0].trim();
+    const tagTipo = (parts[1] && parts[1].trim()) || 'string';
+    const pascal = tagName.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+    if (!pascal) continue;
+    importFieldsData.push({ nombre: pascal, campo: tagName, tipo: tagTipo });
+  }
+  renderImportFields();
+  $('#txtImpTags').value = '';
 });
 
 // ── Bulk tag import ──
@@ -239,7 +250,7 @@ $('#btnTagsGen').addEventListener('click', () => {
     camposData.push({
       nombre: pascal, campo: tagName, tipo: tagTipo, default: false,
       entity: true, request: true, response: true,
-      listar: true, model: true, suggest: false, import: false,
+      listar: true, model: true, import: false,
     });
     added++;
   }
@@ -248,12 +259,13 @@ $('#btnTagsGen').addEventListener('click', () => {
   alert(`${added} campos generados.`);
 });
 
-// ── Toggle import column ──
+// ── Toggle import section ──
 chkImportHeader.addEventListener('change', () => {
+  importSection.style.display = chkImportHeader.checked ? 'block' : 'none';
   if (!chkImportHeader.checked) {
-    camposData.forEach(c => { c.import = false; });
+    importFieldsData = [];
+    renderImportFields();
   }
-  renderCampos();
 });
 
 // ── Toggle detalle section ──
@@ -274,7 +286,7 @@ function createDetalleCard() {
   card.className = 'detalle-card';
   card.dataset.id = id;
 
-  const cardState = { nombre: '', tabla: '', valida: false, importar: false, campos: [{ nombre: 'Id', campo: 'id', tipo: 'int64', default: false, entity: true, request: true, response: true, listar: true, model: true, suggest: false, padre: false, import: false }] };
+  const cardState = { nombre: '', tabla: '', valida: false, importar: false, campos: [{ nombre: 'Id', campo: 'id', tipo: 'int64', default: false, entity: true, request: true, response: true, listar: true, model: true, padre: false, import: false }] };
   detalleCards.push(cardState);
 
   card.innerHTML = `
@@ -428,7 +440,7 @@ function bindDetalleEvents(id, cardState) {
       detalleCards[idx].campos.push({
         nombre: '', campo: '', tipo: 'string', default: false,
         entity: true, request: true, response: true,
-        listar: true, model: true, suggest: false, padre: false, import: false,
+        listar: true, model: true, padre: false, import: false,
       });
       renderDetCampos(id);
     }
@@ -458,7 +470,7 @@ function bindDetalleEvents(id, cardState) {
       detalleCards[idx].campos.push({
         nombre: pascal, campo: tagName, tipo: tagTipo, default: false,
         entity: true, request: true, response: true,
-        listar: true, model: true, suggest: false, padre: false, import: false,
+        listar: true, model: true, padre: false, import: false,
       });
     }
     renderDetCampos(id);
@@ -486,7 +498,7 @@ btnGen.addEventListener('click', async () => {
   const campos = camposData.map(c => ({
     nombre: c.nombre, campo: c.campo, tipo: c.tipo,
     entity: c.entity, request: c.request, response: c.response,
-    listar: c.listar, model: c.model, suggest: c.suggest, import: c.import,
+    listar: c.listar, model: c.model,
   }));
 
   const detalles = detalleCards.map(d => ({
@@ -503,8 +515,12 @@ btnGen.addEventListener('click', async () => {
     componente: txtComponent.value.trim(),
     broker: chkBroker.checked,
     importHeader: chkImportHeader.checked,
+    porSP: chkPorSP.checked,
+    suggestCode: suggestCodeEl.value,
+    suggestLabel: suggestLabelEl.value,
     basePath: txtBase.value.trim(),
     campos,
+    importFields: importFieldsData,
     detalles,
   };
 

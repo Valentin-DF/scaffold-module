@@ -88,6 +88,10 @@
                 <input type="checkbox" id="chkImportHeader" />
                 <span>Importar (Cabecera)</span>
               </label>
+              <label class="chk-label">
+                <input type="checkbox" id="chkPorSP" />
+                <span>Por SP</span>
+              </label>
             </div>
           </div>
         </div>
@@ -111,6 +115,34 @@
           <button id="btnCamposRemove" class="btn btn-sm btn-danger" disabled>− Quitar Seleccionados</button>
         </div>
         <div id="camposTable" class="table-container"></div>
+        <div class="suggest-config">
+          <div class="suggest-row">
+            <label class="form-label">Código (Suggest):</label>
+            <select id="suggestCode" class="select suggest-select"><option value="">(ninguno)</option></select>
+            <label class="form-label">Descripción (Suggest):</label>
+            <select id="suggestLabel" class="select suggest-select"><option value="">(ninguno)</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMPORTAR -->
+    <div id="importSection" class="card card-table" style="display:none">
+      <div class="card-header">
+        <div class="section-line"></div>
+        <span class="section-title">CAMPOS DE IMPORTACION (EXCEL)</span>
+        <div class="card-header-spacer"></div>
+        <div class="bulk-tags">
+          <input type="text" id="txtImpTags" placeholder="tag1:string,tag2:int64,..." class="input mono small" />
+          <button id="btnImpTagsGen" class="btn btn-sm btn-accent">Generar</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="campos-toolbar">
+          <button id="btnImportAdd" class="btn btn-sm btn-success">+ Agregar Campo</button>
+          <button id="btnImportRemove" class="btn btn-sm btn-danger" disabled>− Quitar Seleccionados</button>
+        </div>
+        <div id="importTable" class="table-container"></div>
       </div>
     </div>
 

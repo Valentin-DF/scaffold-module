@@ -253,7 +253,20 @@ main {
 .table-container .col-mid { width: 120px; }
 .table-container .col-wide { width: 160px; }
 
-/* ── DETALLE ── */
+/* ── SUGGEST CONFIG ── */
+.suggest-config {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.suggest-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.suggest-select {
+  width: 200px; height: 30px;
+}
 .detalle-section { display: none; }
 .detalle-cards { display: flex; flex-direction: column; gap: 8px; }
 

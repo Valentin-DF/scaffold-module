@@ -13,6 +13,9 @@ async function generate(config) {
   const tipo = config.tipo;
   const tabla = config.tabla.trim();
   const usesBroker = config.broker;
+  const usesPorSP = config.porSP;
+  const suggestCode = config.suggestCode || '';
+  const suggestLabel = config.suggestLabel || '';
   const basePath = config.basePath.trim();
   const tieneImport = config.importHeader;
   const campos = config.campos || [];
@@ -37,15 +40,19 @@ async function generate(config) {
     inResponse: c.response !== false,
     inListar: c.listar !== false,
     inModel: c.model !== false,
-    inSuggest: c.suggest === true,
-    inImport: c.import === true,
   }));
 
-  const importFields = fields.filter((f) => f.inImport);
+  const importFields = (config.importFields || []).map(c => ({
+    name: c.nombre,
+    tagName: c.campo,
+    type: c.tipo || 'string',
+    inImport: true,
+  }));
 
   const p = {
     ruta, dominio, tipo, tabla, pascal, camel, packageName, componentId, componentField,
-    moduleDir, importPath, fields, importFields, logs, usesBroker,
+    moduleDir, importPath, fields, importFields, logs, usesBroker, usesPorSP,
+    suggestCode, suggestLabel,
   };
 
   log(`=== Generando modulo: ${ruta} ===`);
@@ -175,10 +182,6 @@ async function generate(config) {
       if (!repoContent.includes(`${importPath}/application/response`)) {
         repoContent = repoContent.replace(/\n\)/, `\n\t"${importPath}/application/response"\n)`);
       }
-      // Add activity_log import if not present
-      if (!repoContent.includes('activity-log-structure')) {
-        repoContent = repoContent.replace(/\n\)/, '\n\tactivity_log "ns-backoffice-transactional-service/utils/activity-log-structure"\n)');
-      }
       fs.writeFileSync(repoFile, repoContent, 'utf-8');
       log(`  [~] domain/repository/${ruta}.repository.go (import agregado)`);
     }
@@ -189,9 +192,6 @@ async function generate(config) {
     if (!mssqlContent.includes('//IMPORTAR')) {
       if (!mssqlContent.includes(`${importPath}/application/response`)) {
         mssqlContent = mssqlContent.replace(/\n\)/, `\n\t"${importPath}/application/response"\n)`);
-      }
-      if (!mssqlContent.includes('activity-log-structure')) {
-        mssqlContent = mssqlContent.replace(/\n\)/, '\n\tactivity_log "ns-backoffice-transactional-service/utils/activity-log-structure"\n)');
       }
       mssqlContent += T.importMssqlMethods(p);
       fs.writeFileSync(mssqlFile, mssqlContent, 'utf-8');
@@ -237,15 +237,9 @@ async function generate(config) {
     // Append to repository
     let repoContent2 = fs.readFileSync(path.join(moduleDir, 'domain/repository', `${ruta}.repository.go`), 'utf-8');
     if (!repoContent2.includes(`//DETALLE`)) {
-      const repoDetMethods = `\n\n\t//DETALLE\n\tListar${detPascal}(ctx context.Context, start int, length int, search string, id int64) (res []entity.${p.pascal}${detPascal}Entity, total int64, filtered int64, err error)\n\tCrear${detPascal}(ctx context.Context, ent entity.${p.pascal}${detPascal}Entity, id int64) (response.DetalleResponse, []activity_log.Detalle, error)\n\tActualizar${detPascal}(ctx context.Context, ent entity.${p.pascal}${detPascal}Entity, id int64) (response.DetalleResponse, []activity_log.Detalle, error)\n\tEliminar${detPascal}(ctx context.Context, id int64) (response.DetalleResponse, []activity_log.Detalle, error)\n\tValidacion${detPascal}(ctx context.Context, id int64) (res []entity.Validacion${p.pascal}${detPascal}Entity, err error)`;
+      const repoDetMethods = `\n\n\t//DETALLE\n\tListar${detPascal}(ctx context.Context, start int, length int, search string, id int64) (res []entity.${p.pascal}${detPascal}Entity, total int64, filtered int64, err error)\n\tCrear${detPascal}(ctx context.Context, ent entity.${p.pascal}${detPascal}Entity, id int64) error\n\tActualizar${detPascal}(ctx context.Context, ent entity.${p.pascal}${detPascal}Entity, id int64) error\n\tEliminar${detPascal}(ctx context.Context, id int64) error\n\tValidacion${detPascal}(ctx context.Context, id int64) (res []entity.Validacion${p.pascal}${detPascal}Entity, err error)`;
       const closingBrace2 = repoContent2.lastIndexOf('}');
       repoContent2 = repoContent2.slice(0, closingBrace2) + repoDetMethods + repoContent2.slice(closingBrace2);
-      if (!repoContent2.includes(`${importPath}/application/response`)) {
-        repoContent2 = repoContent2.replace(/\n\)/, `\n\t"${importPath}/application/response"\n)`);
-      }
-      if (!repoContent2.includes('activity-log-structure')) {
-        repoContent2 = repoContent2.replace(/\n\)/, '\n\tactivity_log "ns-backoffice-transactional-service/utils/activity-log-structure"\n)');
-      }
       fs.writeFileSync(path.join(moduleDir, 'domain/repository', `${ruta}.repository.go`), repoContent2, 'utf-8');
       log(`  [~] domain/repository/${ruta}.repository.go (detalle agregado)`);
     }
@@ -253,8 +247,7 @@ async function generate(config) {
     // Append to port
     let portContent2 = fs.readFileSync(path.join(moduleDir, 'application/usecase', 'port.go'), 'utf-8');
     if (!portContent2.includes('//DETALLE')) {
-      const clientPrefix = tipo !== 'movimientos' ? 'ctu *ns.Client, ' : '';
-      const detPortMethods = `\n\n\t//DETALLE\n\tListar${detPascal}(ctx context.Context, start int, length int, search string, id int64) (interface{}, error)\n\tCrear${detPascal}(ctx context.Context, ${clientPrefix}request *request.${p.pascal}${detPascal}Request, id int64) error\n\tActualizar${detPascal}(ctx context.Context, ${clientPrefix}request *request.${p.pascal}${detPascal}Request, id int64) error\n\tEliminar${detPascal}(ctx context.Context, ${clientPrefix}id int64) error`;
+      const detPortMethods = `\n\n\t//DETALLE\n\tListar${detPascal}(ctx context.Context, start int, length int, search string, id int64) (interface{}, error)\n\tCrear${detPascal}(ctx context.Context, request *request.${p.pascal}${detPascal}Request, id int64) error\n\tActualizar${detPascal}(ctx context.Context, request *request.${p.pascal}${detPascal}Request, id int64) error\n\tEliminar${detPascal}(ctx context.Context, id int64) error`;
       const closingBrace2 = portContent2.lastIndexOf('}');
       portContent2 = portContent2.slice(0, closingBrace2) + detPortMethods + portContent2.slice(closingBrace2);
       fs.writeFileSync(path.join(moduleDir, 'application/usecase', 'port.go'), portContent2, 'utf-8');
@@ -264,14 +257,6 @@ async function generate(config) {
     // Append to usecase
     let ucContent = fs.readFileSync(path.join(moduleDir, 'application/usecase', `${ruta}.usecase.go`), 'utf-8');
     if (!ucContent.includes('// DETALLE')) {
-      const isMov = tipo === 'movimientos';
-      const useCaseParamPrefix = isMov ? '' : 'ctu *ns.Client, ';
-      const useCaseCallPrefix = isMov ? '' : 'ctx, ';
-      const detClientOrNil = isMov ? 'nil' : 'ctu';
-      const activityLogBlock_Crear = `\n\tactivity_log.RegistroDeActividades(ctx, ${detClientOrNil}, res.Id, utils.IdComponente.${p.componentField}, activity_log.PreRegistroUtils{Identificador: uuid.New().String(), Fechahora: time.Now().UTC().String(), Action: "Nuevo Detalle", Informativo: false, Detalle: detalles}, true, &[]string{"Detalle"}[0])`;
-      const activityLogBlock_Actualizar = `\n\tactivity_log.RegistroDeActividades(ctx, ${detClientOrNil}, res.Id, utils.IdComponente.${p.componentField}, activity_log.PreRegistroUtils{Identificador: uuid.New().String(), Fechahora: time.Now().UTC().String(), Action: "Actualizado Detalle", Informativo: false, Detalle: detalles}, true, &[]string{"Detalle"}[0])`;
-      const activityLogBlock_Eliminar = `\n\tactivity_log.RegistroDeActividades(ctx, ${detClientOrNil}, res.Id, utils.IdComponente.${p.componentField}, activity_log.PreRegistroUtils{Identificador: uuid.New().String(), Fechahora: time.Now().UTC().String(), Action: "Eliminado Detalle", Informativo: true, Detalle: detalles}, true, &[]string{"Detalle"}[0])`;
-
       const detUcMethods = `
 // DETALLE
 
@@ -287,30 +272,18 @@ func (a *${camel}UseCase) Listar${detPascal}(ctx context.Context, start int, len
 	return mapping.Map${detPascal}PaginacionVo(rs, validacion, total, filtered), nil
 }
 
-func (a *${camel}UseCase) Crear${detPascal}(ctx context.Context, ${useCaseParamPrefix}request *request.${p.pascal}${detPascal}Request, id int64) error {
+func (a *${camel}UseCase) Crear${detPascal}(ctx context.Context, request *request.${p.pascal}${detPascal}Request, id int64) error {
 	mod := mapping.MapDTOto${detPascal}Entity(request)
-	res, detalles, err := a.repo.Crear${detPascal}(ctx, mod, id)
-	if err != nil {
-		return err
-	}${activityLogBlock_Crear}
-	return nil
+	return a.repo.Crear${detPascal}(ctx, mod, id)
 }
 
-func (a *${camel}UseCase) Actualizar${detPascal}(ctx context.Context, ${useCaseParamPrefix}request *request.${p.pascal}${detPascal}Request, id int64) error {
+func (a *${camel}UseCase) Actualizar${detPascal}(ctx context.Context, request *request.${p.pascal}${detPascal}Request, id int64) error {
 	mod := mapping.MapDTOto${detPascal}Entity(request)
-	res, detalles, err := a.repo.Actualizar${detPascal}(ctx, mod, id)
-	if err != nil {
-		return err
-	}${activityLogBlock_Actualizar}
-	return nil
+	return a.repo.Actualizar${detPascal}(ctx, mod, id)
 }
 
-func (a *${camel}UseCase) Eliminar${detPascal}(ctx context.Context, ${useCaseParamPrefix}id int64) error {
-	res, detalles, err := a.repo.Eliminar${detPascal}(ctx, id)
-	if err != nil {
-		return err
-	}${activityLogBlock_Eliminar}
-	return nil
+func (a *${camel}UseCase) Eliminar${detPascal}(ctx context.Context, id int64) error {
+	return a.repo.Eliminar${detPascal}(ctx, id)
 }
 `;
       ucContent += detUcMethods;
@@ -324,8 +297,6 @@ func (a *${camel}UseCase) Eliminar${detPascal}(ctx context.Context, ${useCasePar
     // Append to controller
     let ctrlContent = fs.readFileSync(path.join(moduleDir, 'infrastructure/delivery/http/controller', `${ruta}.controller.go`), 'utf-8');
     if (!ctrlContent.includes(`Listar${detPascal}`)) {
-      const isMov2 = tipo === 'movimientos';
-      const ctrlUseCasePrefix = isMov2 ? '' : 'ctx, ';
       const detCtrlMethods = `
 
 //DETALLE
@@ -348,7 +319,7 @@ func (a *${pascal}Controller) Crear${detPascal}(ctx *ns.Client) {
 		ctx.Fail(err)
 		return
 	}
-	err = a.${camel}UseCase.Crear${detPascal}(ctx.GetContext(), ${ctrlUseCasePrefix}&req, req.IdHeader)
+	err = a.${camel}UseCase.Crear${detPascal}(ctx.GetContext(), &req, req.IdHeader)
 	if err != nil {
 		ctx.Fail(err)
 		return
@@ -363,7 +334,7 @@ func (a *${pascal}Controller) Actualizar${detPascal}(ctx *ns.Client) {
 		ctx.Fail(err)
 		return
 	}
-	err = a.${camel}UseCase.Actualizar${detPascal}(ctx.GetContext(), ${ctrlUseCasePrefix}&req, req.IdHeader)
+	err = a.${camel}UseCase.Actualizar${detPascal}(ctx.GetContext(), &req, req.IdHeader)
 	if err != nil {
 		ctx.Fail(err)
 		return
@@ -372,7 +343,7 @@ func (a *${pascal}Controller) Actualizar${detPascal}(ctx *ns.Client) {
 }
 
 func (a *${pascal}Controller) Eliminar${detPascal}(ctx *ns.Client) {
-	err := a.${camel}UseCase.Eliminar${detPascal}(ctx.GetContext(), ${ctrlUseCasePrefix}ctx.GetIdParam())
+	err := a.${camel}UseCase.Eliminar${detPascal}(ctx.GetContext(), ctx.GetIdParam())
 	if err != nil {
 		ctx.Fail(err)
 		return
@@ -467,74 +438,33 @@ func (a *${pascal}MssqlRepository) Listar${detPascal}(ctx context.Context, start
 	return det${detPascal}RowsToEntities(rows), rs.TotalRows, rs.TotalFiltered, nil
 }
 
-func (a *${pascal}MssqlRepository) Crear${detPascal}(ctx context.Context, ent entity.${p.pascal}${detPascal}Entity, id int64) (response.DetalleResponse, []activity_log.Detalle, error) {
+func (a *${pascal}MssqlRepository) Crear${detPascal}(ctx context.Context, ent entity.${p.pascal}${detPascal}Entity, id int64) error {
 	json, err := db.Marshal(ent)
 	if err != nil {
-		return response.DetalleResponse{}, nil, err
+		return err
 	}
-	var detallePrincipal []activity_log.DetallePrincipalEntity
-	err = a.db.RunUnmarshal(ctx, &detallePrincipal, \`
-		EXEC NS_${detMssqlTable}_I
-			@id = @p1,
-			@json = @p2\`, id, string(json))
-	if err != nil {
-		return response.DetalleResponse{}, nil, err
-	}
-	data := response.DetalleResponse{Estado: "ACTUALIZAR", Id: detallePrincipal[0].Id}
-	var detalle []activity_log.Detalle
-	for _, d := range detallePrincipal[0].Detalle {
-		detalle = append(detalle, activity_log.Detalle{Label: d.Label, Campo: d.Campo, Action: d.Action, ValorAntes: d.ValorAntes, ValorDespues: d.ValorDespues, Tipo: d.Tipo, EsDetalle: d.EsDetalle})
-	}
-	return data, detalle, nil
+	_, err = a.db.Query(ctx, \`EXEC NS_${detMssqlTable}_I @id = @p1, @json = @p2\`, id, string(json))
+	return err
 }
 
-func (a *${pascal}MssqlRepository) Actualizar${detPascal}(ctx context.Context, ent entity.${p.pascal}${detPascal}Entity, id int64) (response.DetalleResponse, []activity_log.Detalle, error) {
+func (a *${pascal}MssqlRepository) Actualizar${detPascal}(ctx context.Context, ent entity.${p.pascal}${detPascal}Entity, id int64) error {
 	json, err := db.Marshal(ent)
 	if err != nil {
-		return response.DetalleResponse{}, nil, err
+		return err
 	}
-	var detallePrincipal []activity_log.DetallePrincipalEntity
-	err = a.db.RunUnmarshal(ctx, &detallePrincipal, \`
-		EXEC NS_${detMssqlTable}_U
-			@id = @p1,
-			@json = @p2\`, id, string(json))
-	if err != nil {
-		return response.DetalleResponse{}, nil, err
-	}
-	data := response.DetalleResponse{Estado: "ACTUALIZAR", Id: detallePrincipal[0].Id}
-	var detalle []activity_log.Detalle
-	for _, d := range detallePrincipal[0].Detalle {
-		detalle = append(detalle, activity_log.Detalle{Label: d.Label, Campo: d.Campo, Action: d.Action, ValorAntes: d.ValorAntes, ValorDespues: d.ValorDespues, Tipo: d.Tipo, EsDetalle: d.EsDetalle})
-	}
-	return data, detalle, nil
+	_, err = a.db.Query(ctx, \`EXEC NS_${detMssqlTable}_U @id = @p1, @json = @p2\`, id, string(json))
+	return err
 }
 
-func (a *${pascal}MssqlRepository) Eliminar${detPascal}(ctx context.Context, id int64) (response.DetalleResponse, []activity_log.Detalle, error) {
-	var detallePrincipal []activity_log.DetallePrincipalEntity
-	err := a.db.RunUnmarshal(ctx, &detallePrincipal, \`
-		EXEC NS_${detMssqlTable}_D
-			@id = @p1\`, id)
-	if err != nil {
-		return response.DetalleResponse{}, nil, err
-	}
-	data := response.DetalleResponse{Estado: "ELIMINAR", Id: detallePrincipal[0].Id}
-	var detalle []activity_log.Detalle
-	for _, d := range detallePrincipal[0].Detalle {
-		detalle = append(detalle, activity_log.Detalle{Label: d.Label, Campo: d.Campo, Action: d.Action, ValorAntes: d.ValorAntes, ValorDespues: d.ValorDespues, Tipo: d.Tipo, EsDetalle: d.EsDetalle})
-	}
-	return data, detalle, nil
+func (a *${pascal}MssqlRepository) Eliminar${detPascal}(ctx context.Context, id int64) error {
+	_, err := a.db.Query(ctx, \`EXEC NS_${detMssqlTable}_D @id = @p1\`, id)
+	return err
 }
 
 func (a *${pascal}MssqlRepository) Validacion${detPascal}(ctx context.Context, id int64) (res []entity.Validacion${p.pascal}${detPascal}Entity, err error) {
 	return nil, nil
 }
 `;
-      if (!mssqlContent2.includes('activity-log-structure')) {
-        mssqlContent2 = mssqlContent2.replace(/\n\)/, '\n\tactivity_log "ns-backoffice-transactional-service/utils/activity-log-structure"\n)');
-      }
-      if (!mssqlContent2.includes(`${importPath}/application/response`)) {
-        mssqlContent2 = mssqlContent2.replace(/\n\)/, `\n\t"${importPath}/application/response"\n)`);
-      }
       mssqlContent2 += detModelBlock + detMssqlMethods;
       fs.writeFileSync(path.join(moduleDir, 'infrastructure/persistence/mssql_repository', `${ruta}.mssql.go`), mssqlContent2, 'utf-8');
       log(`  [~] infrastructure/persistence/mssql_repository/${ruta}.mssql.go (detalle agregado)`);
@@ -616,7 +546,7 @@ func (a *${pascal}Controller) Save${detPascal}Import(ctx *ns.Client) {
 		ctx.Fail(err)
 		return
 	}
-	res, err := a.${camel}UseCase.Save${detPascal}Import(ctx.GetContext(), ctx, id, req)
+	res, err := a.${camel}UseCase.Save${detPascal}Import(ctx.GetContext(), id, req)
 	if err != nil {
 		ctx.Fail(err)
 		return
