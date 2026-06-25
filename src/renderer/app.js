@@ -416,14 +416,18 @@ function createDetalleCard() {
       </div>
     </div>
     <div class="det-import-section" data-id="${id}" style="display:none">
-      <div class="det-campos-title">Campos de Importacion (Excel):</div>
-      <div class="det-import-table table-container" data-id="${id}"></div>
-      <div class="det-campos-toolbar">
-        <button class="btn btn-sm btn-success det-import-add" data-id="${id}">+ Campo</button>
-        <button class="btn btn-sm btn-danger det-import-remove" data-id="${id}">− Campo</button>
-        <input type="text" class="input mono small det-imp-tags-input" data-id="${id}" placeholder="tag1,tag2..." style="width:200px" />
-        <button class="btn btn-sm btn-accent det-imp-tags-gen" data-id="${id}">+Tags</button>
+      <div class="det-import-header">
+        <span class="det-campos-title">Campos de Importacion (Excel)</span>
+        <div class="det-import-tags">
+          <input type="text" class="input mono small det-imp-tags-input" data-id="${id}" placeholder="tag1:string,tag2:int64,..." style="width:200px" />
+          <button class="btn btn-sm btn-accent det-imp-tags-gen" data-id="${id}">Generar</button>
+        </div>
       </div>
+      <div class="det-campos-toolbar">
+        <button class="btn btn-sm btn-success det-import-add" data-id="${id}">+ Agregar Campo</button>
+        <button class="btn btn-sm btn-danger det-import-remove" data-id="${id}">− Quitar Seleccionados</button>
+      </div>
+      <div class="det-import-table table-container" data-id="${id}"></div>
     </div>
   `;
 

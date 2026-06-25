@@ -372,9 +372,22 @@ main {
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
-.det-import-section .det-campos-toolbar {
-  margin-top: 4px;
+.det-import-header {
+  display: flex; align-items: center;
+  margin-bottom: 8px;
 }
+.det-import-header .det-campos-title {
+  flex: 1; margin-bottom: 0;
+}
+.det-import-tags {
+  display: flex; gap: 4px; align-items: center;
+}
+.det-import-tags .input { width: 200px; font-size: 10px; }
+.det-import-tags .btn { height: 24px; font-size: 10px; padding: 0 10px; }
+.det-import-section .det-campos-toolbar {
+  display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; align-items: center;
+}
+.det-import-section .det-campos-toolbar .btn { height: 24px; font-size: 10px; padding: 0 10px; }
 /* ── FOOTER ── */
 footer {
   position: fixed; bottom: 0; left: 0; right: 0;
