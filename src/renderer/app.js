@@ -827,6 +827,7 @@ btnGen.addEventListener('click', async () => {
 
   if (result.success) {
     txtResult.value = result.logs.join('\n');
+    resetForm();
   } else {
     txtResult.value = `[ERROR] ${result.error || result.logs.join('\n')}`;
   }
@@ -834,6 +835,32 @@ btnGen.addEventListener('click', async () => {
   btnGen.disabled = false;
   btnGen.textContent = '⚡ Generar Modulo';
 });
+
+function resetForm() {
+  txtRuta.value = '';
+  txtTabla.value = '';
+  txtComponent.value = '';
+  txtServicio.value = '';
+  delete txtServicio.dataset.userChanged;
+  txtVentana.value = '';
+  chkBroker.checked = false;
+  chkImportHeader.checked = false;
+  importSection.style.display = 'none';
+  importFieldsData = [];
+  renderImportFields();
+  chkTieneDetalle.checked = false;
+  detalleSection.style.display = 'none';
+  detalleCards = [];
+  detalleCardsEl.innerHTML = '';
+  detalleCardId = 0;
+  cmbDom.value = cmbDom.querySelector('option')?.value || '';
+  cmbTipo.value = 'mantenedores';
+  populateDefaults('mantenedores');
+  chkPorSP.disabled = false;
+  suggestCodeEl.value = '';
+  suggestLabelEl.value = '';
+  checkForm();
+}
 
 $('#btnCloseResult').addEventListener('click', () => {
   resultModal.style.display = 'none';
