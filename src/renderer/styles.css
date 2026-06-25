@@ -320,14 +320,20 @@ main {
 }
 .detalle-card .det-campos-title {
   font-size: 11px; font-weight: 700; color: var(--accent);
-  margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;
+  text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
 }
-.detalle-card .det-campos-toolbar {
-  display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;
-  align-items: center;
+.det-campos-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
 }
-.detalle-card .det-campos-toolbar .btn { height: 24px; font-size: 10px; padding: 0 10px; }
-.detalle-card .det-campos-toolbar .input { width: 180px; font-size: 10px; }
+.det-campos-header .det-campos-toolbar {
+  display: flex; gap: 4px; align-items: center;
+}
+.det-campos-header .det-campos-toolbar .btn { height: 24px; font-size: 10px; padding: 0 10px; }
+.det-tags-group {
+  display: flex; gap: 4px; align-items: center; margin-left: auto;
+}
+.det-tags-group .input { width: 180px; font-size: 10px; }
+.det-tags-group .btn { height: 24px; font-size: 10px; padding: 0 10px; }
 
 /* ── DETALLE CAMPOS TABLE ── */
 .det-campos-table { margin-top: 4px; overflow-x: auto; }
@@ -373,21 +379,20 @@ main {
   border-top: 1px solid var(--border);
 }
 .det-import-header {
-  display: flex; align-items: center;
-  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
 }
 .det-import-header .det-campos-title {
-  flex: 1; margin-bottom: 0;
+  white-space: nowrap;
 }
-.det-import-tags {
+.det-import-header .det-campos-toolbar {
   display: flex; gap: 4px; align-items: center;
+}
+.det-import-header .det-campos-toolbar .btn { height: 24px; font-size: 10px; padding: 0 10px; }
+.det-import-tags {
+  display: flex; gap: 4px; align-items: center; margin-left: auto;
 }
 .det-import-tags .input { width: 200px; font-size: 10px; }
 .det-import-tags .btn { height: 24px; font-size: 10px; padding: 0 10px; }
-.det-import-section .det-campos-toolbar {
-  display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; align-items: center;
-}
-.det-import-section .det-campos-toolbar .btn { height: 24px; font-size: 10px; padding: 0 10px; }
 /* ── FOOTER ── */
 footer {
   position: fixed; bottom: 0; left: 0; right: 0;
