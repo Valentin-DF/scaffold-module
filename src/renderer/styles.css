@@ -368,16 +368,14 @@ main {
 
 /* ── DETAIL IMPORT SECTION ── */
 .det-import-section {
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-left: 3px solid var(--accent2);
-  background: rgba(88, 166, 255, 0.04);
-  border-radius: 0 6px 6px 0;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 .det-import-section .det-campos-title {
   margin-bottom: 6px;
   font-size: 11px;
-  color: var(--accent2);
+  color: var(--text-dim);
 }
 .det-import-section .det-campos-toolbar {
   margin-top: 4px;
