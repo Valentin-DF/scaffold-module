@@ -382,29 +382,6 @@ main {
 .det-import-section .det-campos-toolbar {
   margin-top: 4px;
 }
-.det-import-table { margin-top: 4px; overflow-x: auto; }
-.det-import-table table {
-  width: 100%; border-collapse: collapse;
-  font-family: var(--mono); font-size: 11px;
-}
-.det-import-table th {
-  text-align: left; padding: 4px 6px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-dim); font-weight: 500;
-  white-space: nowrap;
-}
-.det-import-table td {
-  padding: 2px 4px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-.det-import-table td input[type="text"]:focus,
-.det-import-table td select:focus {
-  outline: 2px solid var(--accent2) !important;
-  outline-offset: -2px !important;
-  background: #1a1d28 !important;
-  border-radius: 2px;
-}
-
 /* ── FOOTER ── */
 footer {
   position: fixed; bottom: 0; left: 0; right: 0;

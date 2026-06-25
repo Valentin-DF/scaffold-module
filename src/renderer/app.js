@@ -417,7 +417,7 @@ function createDetalleCard() {
     </div>
     <div class="det-import-section" data-id="${id}" style="display:none">
       <div class="det-campos-title">Campos de Importacion (Excel):</div>
-      <div class="det-import-table" data-id="${id}"></div>
+      <div class="det-import-table table-container" data-id="${id}"></div>
       <div class="det-campos-toolbar">
         <button class="btn btn-sm btn-success det-import-add" data-id="${id}">+ Campo</button>
         <button class="btn btn-sm btn-danger det-import-remove" data-id="${id}">− Campo</button>
