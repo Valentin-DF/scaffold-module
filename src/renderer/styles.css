@@ -202,6 +202,8 @@ main {
 
 .table-container {
   overflow-x: auto;
+  max-height: 320px;
+  overflow-y: auto;
 }
 .table-container table {
   width: 100%; border-collapse: collapse;
@@ -274,7 +276,7 @@ main {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 14px;
+  padding: 36px 14px 14px;
   position: relative;
 }
 .detalle-card .card-close {
@@ -336,7 +338,7 @@ main {
 .det-tags-group .btn, .det-import-tags .btn { height: 24px; font-size: 10px; padding: 0 10px; }
 
 /* ── DETALLE CAMPOS TABLE ── */
-.det-campos-table { margin-top: 4px; overflow-x: auto; }
+.det-campos-table { margin-top: 4px; overflow-x: auto; max-height: 300px; overflow-y: auto; }
 .det-campos-table table {
   width: 100%; border-collapse: collapse;
   font-size: 11px;

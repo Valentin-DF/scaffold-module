@@ -24,7 +24,8 @@ async function generate(config) {
   const pascal = toPascalCase(ruta);
   const camel = toCamelCase(ruta);
   const packageName = toGoPackageName(ruta);
-  const componentId =config.componente;
+  const componentId = config.componente;
+  const ventana = config.ventana || '';
   const componentField =  pascal;
 
   const moduleDir = path.join(basePath, dominio, servicio, 'api', tipo, ruta);
@@ -40,6 +41,7 @@ async function generate(config) {
     inResponse: c.response !== false,
     inListar: c.listar !== false,
     inModel: c.model !== false,
+    inSuggest: c.suggest === true,
   }));
 
   const importFields = (config.importFields || []).map(c => ({
@@ -52,7 +54,7 @@ async function generate(config) {
   const p = {
     ruta, dominio, tipo, tabla, pascal, camel, packageName, componentId, componentField,
     moduleDir, importPath, fields, importFields, logs, usesBroker, usesPorSP,
-    suggestCode, suggestLabel,
+    suggestCode, suggestLabel, ventana,
   };
 
   log(`=== Generando modulo: ${ruta} ===`);
@@ -287,9 +289,6 @@ func (a *${camel}UseCase) Eliminar${detPascal}(ctx context.Context, id int64) er
 }
 `;
       ucContent += detUcMethods;
-      if (!ucContent.includes(`${importPath}/domain/entity`)) {
-        ucContent = ucContent.replace(/\n\)/, `\n\t"${importPath}/domain/entity"\n)`);
-      }
       fs.writeFileSync(path.join(moduleDir, 'application/usecase', `${ruta}.usecase.go`), ucContent, 'utf-8');
       log(`  [~] application/usecase/${ruta}.usecase.go (detalle agregado)`);
     }
@@ -371,13 +370,23 @@ func (a *${pascal}Controller) Eliminar${detPascal}(ctx *ns.Client) {
     if (!mssqlContent2.includes(`//DETALLE ${detPascal}`)) {
       const detMssqlTable = det.tabla;
       const detMssqlCols = detFields.filter(f => f.inModel).map(f => f.tagName).join(',');
-      const detRowFields = detFields.filter(f => f.inModel).map(f => structField(f.name, f.type, f.tagName, 'db')).join('\n');
-      const detRowToEntityFields = detFields.filter(f => f.inModel && f.inEntity).map(f => `\t\t${f.name}: row.${f.name},`).join('\n');
-
       function structField(name, type, tag, kind) {
         const t = tag ? ` \`${kind}:"${tag}"\`` : '';
         return `\t${name}\t\t\t\t${type}${t}`;
       }
+      function suggFieldName(name) { return 'Nombre' + (name.startsWith('Id') ? name.slice(2) : name); }
+      function suggFieldTag(tag) { return 'nombre_' + (tag.startsWith('id') ? tag.slice(2) : tag); }
+
+      const detRowFields = detFields.filter(f => f.inModel).flatMap(f => {
+        const orig = structField(f.name, f.type, f.tagName, 'db');
+        if (!f.inSuggest) return [orig];
+        return [orig, structField(suggFieldName(f.name), 'string', suggFieldTag(f.tagName), 'db')];
+      }).join('\n');
+      const detRowToEntityFields = detFields.filter(f => f.inModel).flatMap(f => {
+        const orig = `\t\t${f.name}: row.${f.name},`;
+        if (!f.inSuggest) return [orig];
+        return [orig, `\t\t${suggFieldName(f.name)}: row.${suggFieldName(f.name)},`];
+      }).join('\n');
 
       const detRowStruct = `${camel}${detPascal}Row`;
 
@@ -469,12 +478,7 @@ func (a *${pascal}MssqlRepository) Validacion${detPascal}(ctx context.Context, i
       fs.writeFileSync(path.join(moduleDir, 'infrastructure/persistence/mssql_repository', `${ruta}.mssql.go`), mssqlContent2, 'utf-8');
       log(`  [~] infrastructure/persistence/mssql_repository/${ruta}.mssql.go (detalle agregado)`);
 
-      // Add entity import to usecase if needed
-      let ucContent2 = fs.readFileSync(path.join(moduleDir, 'application/usecase', `${ruta}.usecase.go`), 'utf-8');
-      if (!ucContent2.includes(`${importPath}/domain/entity`)) {
-        ucContent2 = ucContent2.replace(/\n\)/, `\n\t"${importPath}/domain/entity"\n)`);
-        fs.writeFileSync(path.join(moduleDir, 'application/usecase', `${ruta}.usecase.go`), ucContent2, 'utf-8');
-      }
+
 
       // Detail import generation
       if (det.importar) {

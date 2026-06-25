@@ -16,5 +16,5 @@ npm start
 
 ## Documentación
 
-- [FUNCIONALIDAD.md](FUNCIONALIDAD.md) — Descripción detallada del generador y sus capacidades
-- [EJECUCION.md](EJECUCION.md) — Instalación, uso y build
+- [FUNCIONALIDAD.md](FUNCIONALIDAD.md) — Descripción detallada del generador: capas, templates, suggest fields, DocumentoSerieResponse, configuración
+- [EJECUCION.md](EJECUCION.md) — Instalación, uso, build y estructura de archivos generados

@@ -14,6 +14,7 @@ const DEFAULTS = {
     ['IdEstado', 'idestado', 'int64', true, true, true, true, true, true],
     ['Estado', 'estado', 'string', true, true, true, true, true, true],
     ['CodigoEstado', 'codigo_estado', 'interface{}', true, true, true, true, false, true],
+    ['FechaCreacion', 'fecha_creacion', 'string', true, true, true, true, false, true],
     ['FechaActualizado', 'fecha_actualizado', 'string', true, true, true, true, false, true],
     ['ValidacionFormulario', 'validacion_formulario', 'interface{}', true, true, true, true, false, true],
     ['Ventana', 'ventana', 'string', true, true, true, true, false, true],
@@ -26,6 +27,7 @@ const DEFAULTS = {
     ['IdEmpresa', 'idempresa', 'int64', true, true, true, true, false, true],
     ['IdUsuario', 'idusuario', 'int64', true, true, true, true, false, true],
     ['IdModulo', 'idmodulo', 'int64', true, true, true, true, false, true],
+    ['FechaCreacion', 'fecha_creacion', 'string', true, true, true, true, false, true],
     ['FechaActualizado', 'fecha_actualizado', 'string', true, true, true, true, false, true],
     ['ValidacionFormulario', 'validacion_formulario', 'interface{}', true, true, true, true, false, true],
     ['Ventana', 'ventana', 'string', true, true, true, true, false, true],
@@ -45,6 +47,7 @@ const TOGGLE_COLS = [
   { key: 'response', label: 'Res', tooltip: 'Incluir en Response' },
   { key: 'listar', label: 'Lis', tooltip: 'Incluir en Listar' },
   { key: 'model', label: 'Mod', tooltip: 'Incluir en Model' },
+  { key: 'suggest', label: 'Sug', tooltip: 'Usar en Suggest' },
 ];
 
 const DET_TOGGLE_COLS = [
@@ -53,7 +56,7 @@ const DET_TOGGLE_COLS = [
 ];
 
 // ── State ──
-let camposData = [];  // { nombre, campo, tipo, default, entity, request, response, listar, model }
+let camposData = [];  // { nombre, campo, tipo, default, entity, request, response, listar, model, suggest }
 let importFieldsData = []; // { nombre, campo, tipo }
 let detalleCards = []; // { nombre, tabla, valida, importar, campos: [...] }
 let detalleCardId = 0;
@@ -69,6 +72,7 @@ const txtServicio = $('#txtServicio');
 const cmbTipo = $('#cmbTipo');
 const txtTabla = $('#txtTabla');
 const txtComponent = $('#txtComponent');
+const txtVentana = $('#txtVentana');
 const chkBroker = $('#chkBroker');
 const chkTieneDetalle = $('#chkTieneDetalle');
 const chkImportHeader = $('#chkImportHeader');
@@ -89,7 +93,18 @@ const resultModal = $('#resultModal');
 const txtResult = $('#txtResult');
 
 // ── Init ──
-cmbTipo.addEventListener('change', () => populateDefaults(cmbTipo.value));
+function syncPorSP() {
+  if (cmbTipo.value === 'movimientos') {
+    chkPorSP.checked = true;
+    chkPorSP.disabled = true;
+  } else {
+    chkPorSP.disabled = false;
+  }
+}
+cmbTipo.addEventListener('change', () => {
+  populateDefaults(cmbTipo.value);
+  syncPorSP();
+});
 cmbDom.addEventListener('change', () => {
   if (!txtServicio.dataset.userChanged) {
     txtServicio.value = `${cmbDom.value}-service`;
@@ -99,6 +114,7 @@ txtServicio.addEventListener('input', () => {
   txtServicio.dataset.userChanged = 'true';
 });
 populateDefaults('mantenedores');
+syncPorSP();
 
 function toPascalCase(s) {
   return (s || '')
@@ -197,12 +213,22 @@ function renderSuggestCombos() {
   const codeSel = suggestCodeEl;
   const currentCode = codeSel.value;
   codeSel.innerHTML = '<option value="">(ninguno)</option>' + opts;
-  if (currentCode && fields.some(f => f.nombre === currentCode)) codeSel.value = currentCode;
+  if (currentCode && fields.some(f => f.nombre === currentCode)) {
+    codeSel.value = currentCode;
+  } else {
+    const def = fields.find(f => /^codigo$/i.test(f.nombre));
+    if (def) codeSel.value = def.nombre;
+  }
 
   const labelSel = suggestLabelEl;
   const currentLabel = labelSel.value;
   labelSel.innerHTML = '<option value="">(ninguno)</option>' + opts;
-  if (currentLabel && fields.some(f => f.nombre === currentLabel)) labelSel.value = currentLabel;
+  if (currentLabel && fields.some(f => f.nombre === currentLabel)) {
+    labelSel.value = currentLabel;
+  } else {
+    const def = fields.find(f => /^descripcion$/i.test(f.nombre)) || fields.find(f => /^nombre$/i.test(f.nombre));
+    if (def) labelSel.value = def.nombre;
+  }
 }
 
 // ── Render campos table ──
@@ -244,6 +270,7 @@ function renderCamposTable() {
       const idx = parseInt(e.target.dataset.idx);
       const field = e.target.dataset.field;
       camposData[idx][field] = e.target.value;
+      renderSuggestCombos();
     });
   });
   camposTable.querySelectorAll('.cell-select').forEach(el => {
@@ -259,6 +286,7 @@ function renderCamposTable() {
       const isReadOnly = TOGGLE_COLS.find(tc => tc.key === field)?.readOnly;
       if (isReadOnly) return;
       camposData[idx][field] = e.target.checked;
+      renderSuggestCombos();
     });
   });
 
@@ -325,7 +353,7 @@ btnCamposAdd.addEventListener('click', () => {
   camposData.push({
     nombre: '', campo: '', tipo: 'string', default: false,
     entity: true, request: true, response: true,
-    listar: true, model: true,
+    listar: true, model: true, suggest: false,
   });
   renderCampos();
 });
@@ -352,7 +380,7 @@ $('#btnTagsGen').addEventListener('click', () => {
     camposData.push({
       nombre: pascal, campo: tagName, tipo: tagTipo, default: false,
       entity: true, request: true, response: true,
-      listar: true, model: true,
+      listar: true, model: true, suggest: false,
     });
     added++;
   }
@@ -372,8 +400,11 @@ chkImportHeader.addEventListener('change', () => {
 
 // ── Toggle detalle section ──
 chkTieneDetalle.addEventListener('change', () => {
-  detalleSection.style.display = chkTieneDetalle.checked ? 'block' : 'none';
-  if (!chkTieneDetalle.checked) {
+  if (chkTieneDetalle.checked) {
+    detalleSection.style.display = 'block';
+    if (detalleCards.length === 0) createDetalleCard();
+  } else {
+    detalleSection.style.display = 'none';
     detalleCards = [];
     detalleCardsEl.innerHTML = '';
     detalleCardId = 0;
@@ -388,7 +419,7 @@ function createDetalleCard() {
   card.className = 'detalle-card';
   card.dataset.id = id;
 
-  const cardState = { nombre: '', tabla: '', valida: false, importar: false, campos: [{ nombre: 'Id', campo: 'id', tipo: 'int64', default: false, entity: true, request: true, response: true, listar: true, model: true, padre: false }], importFieldsData: [] };
+  const cardState = { nombre: '', tabla: '', valida: false, importar: false, campos: [{ nombre: 'Id', campo: 'id', tipo: 'int64', default: false, entity: true, request: true, response: true, listar: true, model: true, suggest: false, padre: false }], importFieldsData: [] };
   detalleCards.push(cardState);
 
   card.innerHTML = `
@@ -409,8 +440,8 @@ function createDetalleCard() {
       <div class="det-campos-title">Campos:</div>
       <div class="det-campos-toolbar-row">
         <div class="det-campos-btns">
-          <button class="btn btn-sm btn-success det-campo-add" data-id="${id}">+ Campo</button>
-          <button class="btn btn-sm btn-danger det-campo-remove" data-id="${id}">− Campo</button>
+          <button class="btn btn-sm btn-success det-campo-add" data-id="${id}">+ Agregar Campo</button>
+          <button class="btn btn-sm btn-danger det-campo-remove" data-id="${id}" disabled>− Quitar Seleccionados</button>
         </div>
         <div class="det-tags-group">
           <input type="text" class="input mono small det-tags-input" data-id="${id}" placeholder="tag1:string,tag2:int64,..." style="width:200px" />
@@ -453,6 +484,7 @@ function renderDetCampos(id) {
   const campos = detalleCards[cardIdx].campos;
 
   let html = '<table><thead><tr>';
+  html += '<th class="col-tiny"><input type="checkbox" class="det-select-all" data-id="${id}" title="Seleccionar todo" /></th>';
   html += '<th>Nombre</th><th>Tag BD</th><th>Tipo</th>';
   for (const tc of DET_TOGGLE_COLS) {
     html += `<th class="col-tiny" title="${tc.tooltip}">${tc.label}</th>`;
@@ -461,6 +493,7 @@ function renderDetCampos(id) {
 
   campos.forEach((c, i) => {
     html += '<tr>';
+    html += `<td><input type="checkbox" class="det-row-select" data-id="${id}" data-idx="${i}" /></td>`;
     html += `<td><input type="text" value="${escHtml(c.nombre || '')}" class="dc-input" data-id="${id}" data-idx="${i}" data-field="nombre" style="width:100%;border:none;background:transparent;color:var(--text);font-family:var(--mono);font-size:11px" /></td>`;
     html += `<td><input type="text" value="${escHtml(c.campo || '')}" class="dc-input" data-id="${id}" data-idx="${i}" data-field="campo" style="width:100%;border:none;background:transparent;color:var(--text);font-family:var(--mono);font-size:11px" /></td>`;
     html += `<td><select class="dc-select" data-id="${id}" data-idx="${i}" data-field="tipo" style="width:100%;border:none;background:transparent;color:var(--text);font-size:11px">${TYPES.map(t => `<option value="${t}"${t === c.tipo ? ' selected' : ''}>${t}</option>`).join('')}</select></td>`;
@@ -500,6 +533,32 @@ function renderDetCampos(id) {
       if (field === 'padre') renderDetCampos(id);
     });
   });
+
+  // Row select / select-all
+  const removeBtn = card.querySelector('.det-campo-remove');
+  const updateRemoveBtn = () => {
+    const checked = container.querySelectorAll('.det-row-select:checked');
+    removeBtn.disabled = checked.length === 0;
+  };
+
+  container.querySelectorAll('.det-row-select').forEach(el => {
+    el.addEventListener('change', (e) => {
+      e.target.closest('tr').classList.toggle('row-selected', e.target.checked);
+      updateRemoveBtn();
+    });
+  });
+  const detSelectAll = container.querySelector('.det-select-all');
+  if (detSelectAll) {
+    detSelectAll.addEventListener('change', (e) => {
+      container.querySelectorAll('.det-row-select').forEach(el => {
+        el.checked = e.target.checked;
+        el.closest('tr').classList.toggle('row-selected', e.target.checked);
+      });
+      updateRemoveBtn();
+    });
+  }
+
+  updateRemoveBtn();
 }
 
 function getDetalleCardIdx(id) {
@@ -518,11 +577,13 @@ function renderDetImportFields(id) {
   const fields = detalleCards[cardIdx].importFieldsData;
 
   let html = '<table><thead><tr>';
+  html += '<th class="col-tiny"><input type="checkbox" class="det-imp-select-all" data-id="${id}" title="Seleccionar todo" /></th>';
   html += '<th>Nombre</th><th>Tag BD</th><th>Tipo Go</th>';
   html += '</tr></thead><tbody>';
 
   fields.forEach((c, i) => {
     html += '<tr>';
+    html += `<td><input type="checkbox" class="det-imp-row-select" data-id="${id}" data-idx="${i}" /></td>`;
     html += `<td><input type="text" value="${escHtml(c.nombre || '')}" class="dimp-input" data-id="${id}" data-idx="${i}" data-field="nombre" style="width:100%;border:none;background:transparent;color:var(--text);font-family:var(--mono);font-size:11px" /></td>`;
     html += `<td><input type="text" value="${escHtml(c.campo || '')}" class="dimp-input" data-id="${id}" data-idx="${i}" data-field="campo" style="width:100%;border:none;background:transparent;color:var(--text);font-family:var(--mono);font-size:11px" /></td>`;
     html += `<td><select class="dimp-select" data-id="${id}" data-idx="${i}" data-field="tipo" style="width:100%;border:none;background:transparent;color:var(--text);font-size:11px">${TYPES.map(t => `<option value="${t}"${t === c.tipo ? ' selected' : ''}>${t}</option>`).join('')}</select></td>`;
@@ -543,6 +604,32 @@ function renderDetImportFields(id) {
       detalleCards[cardIdx].importFieldsData[idx].tipo = e.target.value;
     });
   });
+
+  // Row select / select-all
+  const removeBtn = card.querySelector('.det-import-remove');
+  const updateRemoveBtn = () => {
+    const checked = container.querySelectorAll('.det-imp-row-select:checked');
+    removeBtn.disabled = checked.length === 0;
+  };
+
+  container.querySelectorAll('.det-imp-row-select').forEach(el => {
+    el.addEventListener('change', (e) => {
+      e.target.closest('tr').classList.toggle('row-selected', e.target.checked);
+      updateRemoveBtn();
+    });
+  });
+  const detImpSelectAll = container.querySelector('.det-imp-select-all');
+  if (detImpSelectAll) {
+    detImpSelectAll.addEventListener('change', (e) => {
+      container.querySelectorAll('.det-imp-row-select').forEach(el => {
+        el.checked = e.target.checked;
+        el.closest('tr').classList.toggle('row-selected', e.target.checked);
+      });
+      updateRemoveBtn();
+    });
+  }
+
+  updateRemoveBtn();
 }
 
 function bindDetalleEvents(id, cardState) {
@@ -600,7 +687,7 @@ function bindDetalleEvents(id, cardState) {
       detalleCards[idx].campos.push({
         nombre: '', campo: '', tipo: 'string', default: false,
         entity: true, request: true, response: true,
-        listar: true, model: true, padre: false,
+        listar: true, model: true, suggest: false, padre: false,
       });
       renderDetCampos(id);
     }
@@ -609,10 +696,15 @@ function bindDetalleEvents(id, cardState) {
   // Remove campo
   card.querySelector('.det-campo-remove').addEventListener('click', () => {
     const idx = cardIdx();
-    if (idx >= 0) {
-      detalleCards[idx].campos.pop();
-      renderDetCampos(id);
+    if (idx < 0) return;
+    const table = card.querySelector('.det-campos-table table');
+    if (!table) return;
+    const checked = [...table.querySelectorAll('.det-row-select:checked')];
+    const indexes = checked.map(el => parseInt(el.dataset.idx)).sort((a, b) => b - a);
+    for (const i of indexes) {
+      detalleCards[idx].campos.splice(i, 1);
     }
+    renderDetCampos(id);
   });
 
   // Tags gen
@@ -630,7 +722,7 @@ function bindDetalleEvents(id, cardState) {
       detalleCards[idx].campos.push({
         nombre: pascal, campo: tagName, tipo: tagTipo, default: false,
         entity: true, request: true, response: true,
-        listar: true, model: true, padre: false,
+        listar: true, model: true, suggest: false, padre: false,
       });
     }
     renderDetCampos(id);
@@ -649,10 +741,15 @@ function bindDetalleEvents(id, cardState) {
   // Remove import campo
   card.querySelector('.det-import-remove').addEventListener('click', () => {
     const idx = cardIdx();
-    if (idx >= 0) {
-      detalleCards[idx].importFieldsData.pop();
-      renderDetImportFields(id);
+    if (idx < 0) return;
+    const table = card.querySelector('.det-import-table table');
+    if (!table) return;
+    const checked = [...table.querySelectorAll('.det-imp-row-select:checked')];
+    const indexes = checked.map(el => parseInt(el.dataset.idx)).sort((a, b) => b - a);
+    for (const i of indexes) {
+      detalleCards[idx].importFieldsData.splice(i, 1);
     }
+    renderDetImportFields(id);
   });
 
   // Import tags gen
@@ -675,13 +772,6 @@ function bindDetalleEvents(id, cardState) {
 }
 
 $('#detalleBtnAdd').addEventListener('click', createDetalleCard);
-$('#detalleBtnRemove').addEventListener('click', () => {
-  if (detalleCardsEl.lastChild) {
-    const id = parseInt(detalleCardsEl.lastChild.dataset.id);
-    detalleCards.pop();
-    detalleCardsEl.lastChild.remove();
-  }
-});
 
 // ── Browse folder ──
 $('#btnBrowse').addEventListener('click', async () => {
@@ -694,7 +784,7 @@ btnGen.addEventListener('click', async () => {
   const campos = camposData.map(c => ({
     nombre: c.nombre, campo: c.campo, tipo: c.tipo,
     entity: c.entity, request: c.request, response: c.response,
-    listar: c.listar, model: c.model,
+    listar: c.listar, model: c.model, suggest: c.suggest,
   }));
 
   const detalles = detalleCards.map(d => ({
@@ -710,6 +800,7 @@ btnGen.addEventListener('click', async () => {
     tipo: cmbTipo.value,
     tabla: txtTabla.value.trim(),
     componente: txtComponent.value.trim(),
+    ventana: txtVentana.value.trim(),
     broker: chkBroker.checked,
     importHeader: chkImportHeader.checked,
     porSP: chkPorSP.checked,
