@@ -372,11 +372,6 @@ main {
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
-.det-import-section .det-campos-title {
-  margin-bottom: 6px;
-  font-size: 11px;
-  color: var(--text-dim);
-}
 .det-import-section .det-campos-toolbar {
   margin-top: 4px;
 }
