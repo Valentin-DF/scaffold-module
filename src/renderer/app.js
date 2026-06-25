@@ -190,6 +190,22 @@ function renderImportFields() {
   updateRemoveBtn();
 }
 
+// ── Render suggest combo selectors ──
+function renderSuggestCombos() {
+  const fields = camposData.filter(c => c.entity);
+  const opts = fields.map(c => `<option value="${escHtml(c.nombre)}">${escHtml(c.nombre)} (${escHtml(c.campo)})</option>`).join('');
+
+  const codeSel = suggestCodeEl;
+  const currentCode = codeSel.value;
+  codeSel.innerHTML = '<option value="">(ninguno)</option>' + opts;
+  if (currentCode && fields.some(f => f.nombre === currentCode)) codeSel.value = currentCode;
+
+  const labelSel = suggestLabelEl;
+  const currentLabel = labelSel.value;
+  labelSel.innerHTML = '<option value="">(ninguno)</option>' + opts;
+  if (currentLabel && fields.some(f => f.nombre === currentLabel)) labelSel.value = currentLabel;
+}
+
 // ── Render campos table ──
 function renderCampos() {
   renderCamposTable();
@@ -302,6 +318,26 @@ $('#btnImpTagsGen').addEventListener('click', () => {
   }
   renderImportFields();
   $('#txtImpTags').value = '';
+});
+
+// ── Main campos add/remove ──
+const btnCamposAdd = $('#btnCamposAdd');
+btnCamposAdd.addEventListener('click', () => {
+  camposData.push({
+    nombre: '', campo: '', tipo: 'string', default: false,
+    entity: true, request: true, response: true,
+    listar: true, model: true, import: false,
+  });
+  renderCampos();
+});
+
+$('#btnCamposRemove').addEventListener('click', () => {
+  const checked = [...camposTable.querySelectorAll('.row-select:checked')];
+  const indexes = checked.map(el => parseInt(el.dataset.idx)).sort((a, b) => b - a);
+  for (const idx of indexes) {
+    camposData.splice(idx, 1);
+  }
+  renderCampos();
 });
 
 // ── Bulk tag import ──
