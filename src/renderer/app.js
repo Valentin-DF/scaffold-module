@@ -49,7 +49,6 @@ const TOGGLE_COLS = [
 
 const DET_TOGGLE_COLS = [
   ...TOGGLE_COLS,
-  { key: 'import', label: 'Imp', tooltip: 'Incluir en Import (Excel)' },
   { key: 'padre', label: 'Pad', tooltip: 'Campo padre del detalle' },
 ];
 
@@ -326,7 +325,7 @@ btnCamposAdd.addEventListener('click', () => {
   camposData.push({
     nombre: '', campo: '', tipo: 'string', default: false,
     entity: true, request: true, response: true,
-    listar: true, model: true, import: false,
+    listar: true, model: true,
   });
   renderCampos();
 });
@@ -353,7 +352,7 @@ $('#btnTagsGen').addEventListener('click', () => {
     camposData.push({
       nombre: pascal, campo: tagName, tipo: tagTipo, default: false,
       entity: true, request: true, response: true,
-      listar: true, model: true, import: false,
+      listar: true, model: true,
     });
     added++;
   }
@@ -389,7 +388,7 @@ function createDetalleCard() {
   card.className = 'detalle-card';
   card.dataset.id = id;
 
-  const cardState = { nombre: '', tabla: '', valida: false, importar: false, campos: [{ nombre: 'Id', campo: 'id', tipo: 'int64', default: false, entity: true, request: true, response: true, listar: true, model: true, padre: false, import: false }] };
+  const cardState = { nombre: '', tabla: '', valida: false, importar: false, campos: [{ nombre: 'Id', campo: 'id', tipo: 'int64', default: false, entity: true, request: true, response: true, listar: true, model: true, padre: false }], importFieldsData: [] };
   detalleCards.push(cardState);
 
   card.innerHTML = `
@@ -414,6 +413,16 @@ function createDetalleCard() {
         <button class="btn btn-sm btn-danger det-campo-remove" data-id="${id}">− Campo</button>
         <input type="text" class="input mono small det-tags-input" data-id="${id}" placeholder="tag1,tag2..." style="width:200px" />
         <button class="btn btn-sm btn-accent det-tags-gen" data-id="${id}">+Tags</button>
+      </div>
+    </div>
+    <div class="det-import-section" data-id="${id}" style="display:none">
+      <div class="det-campos-title">Campos de Importacion (Excel):</div>
+      <div class="det-import-table" data-id="${id}"></div>
+      <div class="det-campos-toolbar">
+        <button class="btn btn-sm btn-success det-import-add" data-id="${id}">+ Campo</button>
+        <button class="btn btn-sm btn-danger det-import-remove" data-id="${id}">− Campo</button>
+        <input type="text" class="input mono small det-imp-tags-input" data-id="${id}" placeholder="tag1,tag2..." style="width:200px" />
+        <button class="btn btn-sm btn-accent det-imp-tags-gen" data-id="${id}">+Tags</button>
       </div>
     </div>
   `;
@@ -450,10 +459,6 @@ function renderDetCampos(id) {
     for (const tc of DET_TOGGLE_COLS) {
       let checked = c[tc.key] ? ' checked' : '';
       let ro = tc.readOnly ? ' disabled' : '';
-      if (tc.key === 'import' && !detalleCards[cardIdx].importar) {
-        checked = '';
-        ro = ' disabled';
-      }
       html += `<td><input type="checkbox" class="dc-chk" data-id="${id}" data-idx="${i}" data-field="${tc.key}"${checked}${ro} style="display:block;margin:0 auto;accent-color:var(--accent)" /></td>`;
     }
     html += '</tr>';
@@ -480,12 +485,54 @@ function renderDetCampos(id) {
       const field = e.target.dataset.field;
       const isReadOnly = TOGGLE_COLS.find(tc => tc.key === field)?.readOnly;
       if (isReadOnly) return;
-      if (field === 'import' && !detalleCards[cardIdx].importar) return;
       if (field === 'padre' && e.target.checked) {
         detalleCards[cardIdx].campos.forEach((c, i) => { if (i !== idx) c.padre = false; });
       }
       detalleCards[cardIdx].campos[idx][field] = e.target.checked;
       if (field === 'padre') renderDetCampos(id);
+    });
+  });
+}
+
+function getDetalleCardIdx(id) {
+  for (let i = 0; i < detalleCardsEl.children.length; i++) {
+    if (parseInt(detalleCardsEl.children[i].dataset.id) === id) return i;
+  }
+  return -1;
+}
+
+function renderDetImportFields(id) {
+  const card = detalleCardsEl.querySelector(`.detalle-card[data-id="${id}"]`);
+  if (!card) return;
+  const container = card.querySelector('.det-import-table');
+  const cardIdx = getDetalleCardIdx(id);
+  if (cardIdx < 0) return;
+  const fields = detalleCards[cardIdx].importFieldsData;
+
+  let html = '<table><thead><tr>';
+  html += '<th>Nombre</th><th>Tag BD</th><th>Tipo Go</th>';
+  html += '</tr></thead><tbody>';
+
+  fields.forEach((c, i) => {
+    html += '<tr>';
+    html += `<td><input type="text" value="${escHtml(c.nombre || '')}" class="dimp-input" data-id="${id}" data-idx="${i}" data-field="nombre" style="width:100%;border:none;background:transparent;color:var(--text);font-family:var(--mono);font-size:11px" /></td>`;
+    html += `<td><input type="text" value="${escHtml(c.campo || '')}" class="dimp-input" data-id="${id}" data-idx="${i}" data-field="campo" style="width:100%;border:none;background:transparent;color:var(--text);font-family:var(--mono);font-size:11px" /></td>`;
+    html += `<td><select class="dimp-select" data-id="${id}" data-idx="${i}" data-field="tipo" style="width:100%;border:none;background:transparent;color:var(--text);font-size:11px">${TYPES.map(t => `<option value="${t}"${t === c.tipo ? ' selected' : ''}>${t}</option>`).join('')}</select></td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  container.querySelectorAll('.dimp-input').forEach(el => {
+    el.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      detalleCards[cardIdx].importFieldsData[idx][e.target.dataset.field] = e.target.value;
+    });
+  });
+  container.querySelectorAll('.dimp-select').forEach(el => {
+    el.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      detalleCards[cardIdx].importFieldsData[idx].tipo = e.target.value;
     });
   });
 }
@@ -528,11 +575,13 @@ function bindDetalleEvents(id, cardState) {
   card.querySelector('.det-import').addEventListener('change', (e) => {
     const idx = cardIdx();
     if (idx >= 0) {
-      if (!e.target.checked) {
-        detalleCards[idx].campos.forEach(c => { c.import = false; });
-      }
       detalleCards[idx].importar = e.target.checked;
-      renderDetCampos(id);
+      const section = card.querySelector('.det-import-section');
+      section.style.display = e.target.checked ? 'block' : 'none';
+      if (!e.target.checked) {
+        detalleCards[idx].importFieldsData = [];
+      }
+      renderDetImportFields(id);
     }
   });
 
@@ -543,7 +592,7 @@ function bindDetalleEvents(id, cardState) {
       detalleCards[idx].campos.push({
         nombre: '', campo: '', tipo: 'string', default: false,
         entity: true, request: true, response: true,
-        listar: true, model: true, padre: false, import: false,
+        listar: true, model: true, padre: false,
       });
       renderDetCampos(id);
     }
@@ -573,10 +622,46 @@ function bindDetalleEvents(id, cardState) {
       detalleCards[idx].campos.push({
         nombre: pascal, campo: tagName, tipo: tagTipo, default: false,
         entity: true, request: true, response: true,
-        listar: true, model: true, padre: false, import: false,
+        listar: true, model: true, padre: false,
       });
     }
     renderDetCampos(id);
+    input.value = '';
+  });
+
+  // Add import campo
+  card.querySelector('.det-import-add').addEventListener('click', () => {
+    const idx = cardIdx();
+    if (idx >= 0) {
+      detalleCards[idx].importFieldsData.push({ nombre: '', campo: '', tipo: 'string' });
+      renderDetImportFields(id);
+    }
+  });
+
+  // Remove import campo
+  card.querySelector('.det-import-remove').addEventListener('click', () => {
+    const idx = cardIdx();
+    if (idx >= 0) {
+      detalleCards[idx].importFieldsData.pop();
+      renderDetImportFields(id);
+    }
+  });
+
+  // Import tags gen
+  card.querySelector('.det-imp-tags-gen').addEventListener('click', () => {
+    const input = card.querySelector('.det-imp-tags-input');
+    const tags = input.value.split(',').map(s => s.trim()).filter(Boolean);
+    const idx = cardIdx();
+    if (idx < 0) return;
+    for (const t of tags) {
+      const parts = t.split(/[:|]/);
+      const tagName = parts[0].trim();
+      const tagTipo = (parts[1] && parts[1].trim()) || 'string';
+      const pascal = tagName.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+      if (!pascal) continue;
+      detalleCards[idx].importFieldsData.push({ nombre: pascal, campo: tagName, tipo: tagTipo });
+    }
+    renderDetImportFields(id);
     input.value = '';
   });
 }
@@ -607,6 +692,7 @@ btnGen.addEventListener('click', async () => {
   const detalles = detalleCards.map(d => ({
     nombre: d.nombre, tabla: d.tabla, valida: d.valida, importar: d.importar,
     campos: d.campos,
+    importFields: d.importFieldsData,
   }));
 
   const config = {

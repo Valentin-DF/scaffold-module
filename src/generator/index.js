@@ -478,7 +478,12 @@ func (a *${pascal}MssqlRepository) Validacion${detPascal}(ctx context.Context, i
 
       // Detail import generation
       if (det.importar) {
-        const detImportFields = detFields.filter(f => f.inImport);
+        const detImportFields = (det.importFields || []).map(c => ({
+          name: c.nombre,
+          tagName: c.campo,
+          type: c.tipo || 'string',
+          inImport: true,
+        }));
         if (detImportFields.length > 0) {
           const detImportEntityBlock = detImportFields.map(f => `\t${f.name}\t\t\t\t${f.type}\t\t\t\`db:"${f.tagName}"\``).join('\n');
           const detImportRequestBlock = detImportFields.map(f => `\t${f.name}\t\t\t\t${f.type}\t\t\t\`json:"${f.tagName}"\``).join('\n');
