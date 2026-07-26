@@ -180,10 +180,6 @@ async function generate(config) {
     if (!repoContent.includes('IMPORTAR')) {
       const closingBrace = repoContent.lastIndexOf('}');
       repoContent = repoContent.slice(0, closingBrace) + T.importRepoMethods(p) + repoContent.slice(closingBrace);
-      // Add response import if not present
-      if (!repoContent.includes(`${importPath}/application/response`)) {
-        repoContent = repoContent.replace(/\n\)/, `\n\t"${importPath}/application/response"\n)`);
-      }
       fs.writeFileSync(repoFile, repoContent, 'utf-8');
       log(`  [~] domain/repository/${ruta}.repository.go (import agregado)`);
     }
@@ -192,9 +188,6 @@ async function generate(config) {
     const mssqlFile = path.join(moduleDir, 'infrastructure/persistence/mssql_repository', `${ruta}.mssql.go`);
     let mssqlContent = fs.readFileSync(mssqlFile, 'utf-8');
     if (!mssqlContent.includes('//IMPORTAR')) {
-      if (!mssqlContent.includes(`${importPath}/application/response`)) {
-        mssqlContent = mssqlContent.replace(/\n\)/, `\n\t"${importPath}/application/response"\n)`);
-      }
       mssqlContent += T.importMssqlMethods(p);
       fs.writeFileSync(mssqlFile, mssqlContent, 'utf-8');
       log(`  [~] infrastructure/persistence/mssql_repository/${ruta}.mssql.go (import agregado)`);

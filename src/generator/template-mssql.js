@@ -22,7 +22,7 @@ function mssqlGo(p) {
     .join('\n') : '';
 
   const crearImpl = p.usesPorSP
-    ? `func (a *${p.pascal}MssqlRepository) Crear(ctx context.Context, modelo entity.${p.pascal}Entity) (info entity.InfoRetornoEntity, err error) {
+    ? `func (a *${p.pascal}MssqlRepository) Crear(ctx context.Context, modelo entity.${p.pascal}Entity) (info entity.Retorno, err error) {
 	meta := ns.MetaFromContext(ctx)
 	if meta == nil {
 		err = fmt.Errorf("no meta found in context")
@@ -38,7 +38,7 @@ function mssqlGo(p) {
 	}
 	return
 }`
-    : `func (a *${p.pascal}MssqlRepository) Crear(ctx context.Context, modelo entity.${p.pascal}Entity) (info entity.InfoRetornoEntity, err error) {
+    : `func (a *${p.pascal}MssqlRepository) Crear(ctx context.Context, modelo entity.${p.pascal}Entity) (info entity.Retorno, err error) {
 	meta := ns.MetaFromContext(ctx)
 	if meta == nil {
 		err = fmt.Errorf("no meta found in context")
@@ -51,12 +51,12 @@ ${mapEntries}
 	if err != nil {
 		return
 	}
-	info = entity.InfoRetornoEntity{Id: id}
+	info = entity.Retorno{Id: id}
 	return
 }`;
 
   const actualizarImpl = p.usesPorSP
-    ? `func (a *${p.pascal}MssqlRepository) Actualizar(ctx context.Context, id int64, modelo entity.${p.pascal}Entity) (info entity.InfoRetornoEntity, err error) {
+    ? `func (a *${p.pascal}MssqlRepository) Actualizar(ctx context.Context, id int64, modelo entity.${p.pascal}Entity) (info entity.Retorno, err error) {
 	meta := ns.MetaFromContext(ctx)
 	if meta == nil {
 		err = fmt.Errorf("no meta found in context")
@@ -72,7 +72,7 @@ ${mapEntries}
 	}
 	return
 }`
-    : `func (a *${p.pascal}MssqlRepository) Actualizar(ctx context.Context, id int64, modelo entity.${p.pascal}Entity) (info entity.InfoRetornoEntity, err error) {
+    : `func (a *${p.pascal}MssqlRepository) Actualizar(ctx context.Context, id int64, modelo entity.${p.pascal}Entity) (info entity.Retorno, err error) {
 	meta := ns.MetaFromContext(ctx)
 	if meta == nil {
 		err = fmt.Errorf("no meta found in context")
@@ -88,12 +88,12 @@ ${updateMapEntries}
 	if err != nil {
 		return
 	}
-	info = entity.InfoRetornoEntity{Id: id}
+	info = entity.Retorno{Id: id}
 	return
 }`;
 
   const eliminarImpl = p.usesPorSP
-    ? `func (a *${p.pascal}MssqlRepository) Eliminar(ctx context.Context, id int64) (info entity.InfoRetornoEntity, err error) {
+    ? `func (a *${p.pascal}MssqlRepository) Eliminar(ctx context.Context, id int64) (info entity.Retorno, err error) {
 	meta := ns.MetaFromContext(ctx)
 	if meta == nil {
 		err = fmt.Errorf("no meta found in context")
@@ -105,7 +105,7 @@ ${updateMapEntries}
 	}
 	return
 }`
-    : `func (a *${p.pascal}MssqlRepository) Eliminar(ctx context.Context, id int64) (info entity.InfoRetornoEntity, err error) {
+    : `func (a *${p.pascal}MssqlRepository) Eliminar(ctx context.Context, id int64) (info entity.Retorno, err error) {
 	meta := ns.MetaFromContext(ctx)
 	if meta == nil {
 		err = fmt.Errorf("no meta found in context")
@@ -121,7 +121,7 @@ ${updateMapEntries}
 	if err != nil {
 		return
 	}
-	info = entity.InfoRetornoEntity{Id: id}
+	info = entity.Retorno{Id: id}
 	return
 }`;
 
@@ -267,11 +267,16 @@ function importMssqlMethods(p) {
   return `
 //IMPORTAR
 
-func (a *${p.pascal}MssqlRepository) SaveImport(ctx context.Context, id int64, entity []entity.ImportExceldbEntity) (data response.DetalleResponse, err error) {
+func (a *${p.pascal}MssqlRepository) SaveImport(ctx context.Context, id int64, entity []entity.ImportExceldbEntity) (data entity.Detalle, err error) {
 	res, err := db.Marshal(entity)
 	if err != nil { return }
-	err = a.db.RunUnmarshal(ctx, &data, \`EXEC NS_${p.tabla}_D_SAVE_IMPORT @id = @p1 , @json = @p2\`, id, string(res))
+	var raw struct {
+		Estado string \`db:"estado"\`
+		Id     int64  \`db:"id"\`
+	}
+	err = a.db.RunUnmarshal(ctx, &raw, \`EXEC NS_${p.tabla}_D_SAVE_IMPORT @id = @p1 , @json = @p2\`, id, string(res))
 	if err != nil { return }
+	data = entity.Detalle{Estado: raw.Estado, Id: raw.Id}
 	return
 }
 

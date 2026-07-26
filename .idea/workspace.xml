@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="530e7a74-cbac-4a92-b947-c4521257caeb" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/src/generator/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/generator/template-controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/template-controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/generator/template-entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/template-entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/generator/template-mssql.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/template-mssql.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/generator/template-port.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/template-port.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/generator/template-repository.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/template-repository.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/generator/template-request.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/template-request.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/generator/template-usecase.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/template-usecase.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test-gen.js" beforeDir="false" afterPath="$PROJECT_DIR$/test-gen.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" url="file://$PROJECT_DIR$/../../../../Program Files/Go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 0,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3Get2mv1pWmfj3PWo7ST20iA7il" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Go Test.TestToInt in github.com/scaffold-module/pkg/convert.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.GoLinterPluginOnboardingV2": "true",
+    "RunOnceActivity.GoLinterPluginStorageMigration": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.analysis.ui.options.defaults": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "go.sdk.automatically.set": "true",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/Yoga",
+    "nodejs_package_manager_path": "npm"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="TestToInt in github.com/scaffold-module/pkg/convert" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="scaffold-module" />
+      <working_directory value="$PROJECT_DIR$/pkg/convert" />
+      <kind value="PACKAGE" />
+      <package value="github.com/scaffold-module/pkg/convert" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestToInt\E$" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.TestToInt in github.com/scaffold-module/pkg/convert" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-72a9cf600ed8-3dd3895e5e08-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-261.26222.72" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="530e7a74-cbac-4a92-b947-c4521257caeb" name="Changes" comment="" />
+      <created>1784343657906</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1784343657906</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

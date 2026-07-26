@@ -5,6 +5,7 @@ import (
 	"context"
 	"${p.importPath}/application/request"
 	"${p.importPath}/application/response"
+	"${p.importPath}/domain/entity"
 )
 
 type ${p.pascal}UseCase interface {
@@ -27,7 +28,7 @@ type ${p.pascal}UseCase interface {
 }
 
 function importPortMethods(p) {
-  return `\n\n\t/*IMPORTAR*/\n\tValidateImport(ctx context.Context, id int64, req []request.ImportExcelRequest) (resp response.ImportExcelResponse, err error)\n\tSaveImport(ctx context.Context, id int64, req []request.ImportExcelRequest) (res response.DetalleResponse, err error)`;
+  return `\n\n\t/*IMPORTAR*/\n\tValidateImport(ctx context.Context, id int64, req []request.ImportExcelRequest) (resp response.ImportExcelResponse, err error)\n\tSaveImport(ctx context.Context, id int64, req []request.ImportExcelRequest) (res entity.Detalle, err error)`;
 }
 
 module.exports = { portGo, importPortMethods };

@@ -6,6 +6,7 @@ import (
 	"${p.importPath}/application/mapping"
 	"${p.importPath}/application/request"
 	"${p.importPath}/application/response"
+	"${p.importPath}/domain/entity"
 	"${p.importPath}/domain/repository"
 )
 
@@ -26,11 +27,11 @@ func (a *${p.camel}UseCase) Listar(ctx context.Context, start int, length int, s
 
 func (a *${p.camel}UseCase) Crear(ctx context.Context, request *request.${p.pascal}Request) (res *response.${p.pascal}Response, err error) {
 	mod := mapping.MapDTOtoEntity(request)
-	info, err := a.repo.Crear(ctx, mod)
+	retorno, err := a.repo.Crear(ctx, mod)
 	if err != nil {
 		return
 	}
-	rs, err := a.repo.BuscarPorID(ctx, info.Id)
+	rs, err := a.repo.BuscarPorID(ctx, retorno.Id)
 	if err != nil {
 		return
 	}
@@ -40,11 +41,11 @@ func (a *${p.camel}UseCase) Crear(ctx context.Context, request *request.${p.pasc
 
 func (a *${p.camel}UseCase) Actualizar(ctx context.Context, id int64, request *request.${p.pascal}Request) (res *response.${p.pascal}Response, err error) {
 	mod := mapping.MapDTOtoEntity(request)
-	info, err := a.repo.Actualizar(ctx, id, mod)
+	retorno, err := a.repo.Actualizar(ctx, id, mod)
 	if err != nil {
 		return
 	}
-	rs, err := a.repo.BuscarPorID(ctx, info.Id)
+	rs, err := a.repo.BuscarPorID(ctx, retorno.Id)
 	if err != nil {
 		return
 	}
@@ -141,7 +142,7 @@ func (app *${p.camel}UseCase) ValidateImport(ctx context.Context, id int64, req 
 	return
 }
 
-func (app *${p.camel}UseCase) SaveImport(ctx context.Context, id int64, req []request.ImportExcelRequest) (res response.DetalleResponse, err error) {
+func (app *${p.camel}UseCase) SaveImport(ctx context.Context, id int64, req []request.ImportExcelRequest) (res entity.Detalle, err error) {
 	resDB := mapping.MapValidateImportParaDBToDTO(req)
 	res, err = app.repo.SaveImport(ctx, id, resDB)
 	if err != nil { return }

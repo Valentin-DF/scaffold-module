@@ -42,6 +42,10 @@ func (a *${p.pascal}Controller) Crear(ctx *ns.Client) {
 		ctx.Fail(err)
 		return
 	}
+	if err := req.Validate(); err != nil {
+		ctx.Fail(err)
+		return
+	}
 	req.IdComponente = utils.IdComponente.${p.componentField}
 	req.IdEmpresa = ctx.User.CompanyId
 	req.IdUsuario = ctx.User.UserId
@@ -64,6 +68,10 @@ func (a *${p.pascal}Controller) Crear(ctx *ns.Client) {
 func (a *${p.pascal}Controller) Actualizar(ctx *ns.Client) {
 	var req request.${p.pascal}Request
 	if err := ctx.UnmarshalDTO(&req); err != nil {
+		ctx.Fail(err)
+		return
+	}
+	if err := req.Validate(); err != nil {
 		ctx.Fail(err)
 		return
 	}

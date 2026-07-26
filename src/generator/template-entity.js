@@ -18,14 +18,6 @@ var (
 	Err${p.pascal}NoEncontrado    = errors.New("${p.ruta} no encontrado")
 )
 
-type DocumentoSerieResponse struct {
-	IdDocumento *int64
-	Documento   *string
-	IdSerie     *int64
-	Serie       *string
-	Numero      *int64
-}
-
 type ${p.pascal}Entity struct {
 ${fields}
 }
@@ -46,9 +38,14 @@ func (e *${p.pascal}Entity) Deshabilitar() error {
 	return nil
 }
 
-type InfoRetornoEntity struct {
+type Retorno struct {
 	Id     int64  \`db:"id"\`
 	Extras string \`db:"extras"\`
+}
+
+type Detalle struct {
+	Estado string
+	Id     int64
 }
 `;
 }
